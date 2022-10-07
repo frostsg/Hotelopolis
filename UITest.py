@@ -1,4 +1,5 @@
 from tkinter import *
+import math
 import pandas as pd
 import csv
 import nltk
@@ -6,10 +7,9 @@ from nltk.sentiment.vader import SentimentIntensityAnalyzer
 
 ##########Initialise values############
 window = Tk()
-data = pd.read_csv("../../../AssignmentTest/venv/Datafiniti_Hotel_Reviews.csv")
+data = pd.read_csv("../Filtered_Datafiniti_Hotel_Main_Review.csv")
 window.geometry("900x600")
 window.option_add("*Background", "white")
-
 senti = SentimentIntensityAnalyzer()
 
 #reviews text manager
@@ -42,13 +42,12 @@ class Hotel:
 
 #dropdown box options
 HotelOptions=[
-    'Aloft Arundel Mills',
-    'Econolodge',
-    'Hotel Zelos',
-    'Fairmont Grand Del Mar',
-    'Best Western at OHare',
-    'Virgin Hotels Chicago',
-    'Rancho Valencia Resort Spa'
+    'Hotel Russo Palace',
+    'Little Paradise Hotel',
+    'Hawthorn Suites By Wyndham Livermore Wine Country',
+    'Fairfield Inn By Marriott Binghamton',
+    'Days Inn El Reno Ok',
+    'Polynesian Plaza'
 ]
 
 SortOptions = [
@@ -57,7 +56,6 @@ SortOptions = [
     'Rating (High to Low)',
     'Rating (Low to High)'
     ]
-
 
 #################functions#####################
 #clear current hotel details and formatting
@@ -112,9 +110,9 @@ def UpdateRecommendations(hotel):
     for HotelButton in RecommendedHotelsList:
         HotelButton.destroy()
     for index, otherhotel in enumerate(HotelsList):
-        if (round(otherhotel.AverageScore) >= hotel.AverageScore and otherhotel.Name != hotel.Name):
+        if (round(otherhotel.AverageScore) >= math.ceil(hotel.AverageScore) and otherhotel.Name != hotel.Name):
             RecoHotelMenuButton = Button(RecommendationFrame, text=otherhotel.Name + "\n Average Score: %0.2f" % otherhotel.AverageScore,
-                                     command=lambda otherhotel=otherhotel: DisplayHotelDetails(otherhotel), width=20, height=4, font=("Arial", 10), relief=GROOVE)
+                                     command=lambda otherhotel=otherhotel: DisplayHotelDetails(otherhotel), width=26, height=6, font=("Arial", 10), relief=GROOVE, wraplength=200)
             RecoHotelMenuButton.grid(row=index+1, column=0, sticky=N, pady=10, padx= 10)
             RecommendedHotelsList.append(RecoHotelMenuButton)
 

@@ -1,7 +1,7 @@
 """
 This library webscrap hotel reviews from tripadvisor.com and save it into a csv file.
+Done by frostsg
 """
-
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
@@ -32,8 +32,12 @@ def NEW_tripadvisor_ExtractReview(url):
     hotel_name = webdriver.find_element(By.ID, value="HEADING").text
     # Description of hotel is extracted and saved into variable hotel_description
     hotel_description = webdriver.find_element(By.CSS_SELECTOR, value=".fIrGe._T").text
+    # Address of hotel is extracted and saved into variable hotel_address
+    hotel_address = webdriver.find_element(By.CSS_SELECTOR, ".fHvkI.PTrfg").text
     # A new csv file is created with these few headings
-    df = pd.DataFrame(columns = ['title', 'Date of Stay', 'review'])
+    #df = pd.DataFrame(columns = ['address', 'name', 'reviews.text', 'reviews.rating'])
+    df = pd.read_csv("Filtered_Datafiniti_Hotel_Main_Review.csv")
+    print(len(df))
     # A for loop that will loop 20 times
     for j in range(0,20):
         time.sleep(2)
@@ -42,24 +46,21 @@ def NEW_tripadvisor_ExtractReview(url):
         #rating = webdriver.find_elements(by=By.XPATH, value="//span[contains(@class,'ui_bubble_rating bubble_')]")
         # Looping through the list of review boxes
         for i in review_box:
-            # find the title
-            title = i.find_element(by=By.CSS_SELECTOR, value='.KgQgP.MC._S.b.S6.H5._a').text  
             # find the review 
             review = i.find_element(by=By.CSS_SELECTOR, value='.fIrGe._T').text 
             #review = i.find_element(By.XPATH, "(//q[@class='QewHA H4 _a']/span)").text.replace("\n", " ")
             # find the date
-            date = i.find_element(by=By.CSS_SELECTOR, value=".teHYY._R.Me.S4.H3").text
+            #date = i.find_element(by=By.CSS_SELECTOR, value=".teHYY._R.Me.S4.H3").text
             # save the title, date and review into csv file
-            df.loc[len(df)] = [title, date, review]
+            df.loc[len(df)] = [hotel_address, hotel_name, review, ' ']        
         try:
-            # Try to find the next button to click to get the next few reviews or else the loop will break
             webdriver.find_element(By.XPATH, "//a[@class='ui_button nav next primary ']").click()
         except ElementClickInterceptedException:
             break
     # replacing the spaces in hotel_name with _
     hotel_name = hotel_name.replace(" ", "_")
     # Naming the CSV file as the hotel name
-    df.to_csv(hotel_name + ".csv")
+    df.to_csv("Filtered_Datafiniti_Hotel_Main_Review.csv", index=False)
     webdriver.quit()
 
 def airbnb_ExtractReview(url, list1, list2, list3, list4):
@@ -101,9 +102,17 @@ def urlchecker(url):
     else:
         print("This url is invalid")
           
-#urlchecker("https://www.airbnb.com.sg/rooms/38134989?adults=1&children=0&infants=0&check_in=2022-10-09&check_out=2022-10-15&federated_search_id=ac3351c5-d912-4c60-bb85-5f95018d250a&source_impression_id=p3_1664093112_r5qK0mf3BDzW1wCL")
+          
+
+#urlchecker("https://www.tripadvisor.com/Hotel_Review-g298570-d555433-Reviews-Hilton_Kuala_Lumpur-Kuala_Lumpur_Wilayah_Persekutuan.html")
+urlchecker("https://www.tripadvisor.com.sg/Hotel_Review-g298570-d12621892-Reviews-EQ_Kuala_Lumpur-Kuala_Lumpur_Wilayah_Persekutuan.html")
+urlchecker("https://www.tripadvisor.com/Hotel_Review-g60763-d93525-Reviews-Sanctuary_Hotel_New_York-New_York_City_New_York.html")
 urlchecker("https://www.tripadvisor.com/Hotel_Review-g294265-d1770798-Reviews-Marina_Bay_Sands-Singapore.html")
-#urlchecker("https://www.tripadvisor.com/Hotel_Review-g60763-d93525-Reviews-Sanctuary_Hotel_New_York-New_York_City_New_York.html")
+urlchecker("https://www.tripadvisor.com/Hotel_Review-g194856-d498287-Reviews-Hotel_Balocco-Porto_Cervo_Arzachena_Province_of_Olbia_Tempio_Sardinia.html")
+urlchecker("https://www.tripadvisor.com.sg/Hotel_Review-g294265-d302294-Reviews-Pan_Pacific_Singapore-Singapore.html")
+urlchecker("https://www.tripadvisor.com/Hotel_Review-g294265-d301468-Reviews-or3905-Mandarin_Oriental_Singapore-Singapore.html")
+
 #print(len(name_list), len(titles_list), len(reviews_list), len(dates_list), len(ratings_list))
+
 
 

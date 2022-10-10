@@ -1,5 +1,4 @@
 # Hotelopolis
-Python Project for INF1002
 ![alt text <](myicon.ico)
 
 Hotelopolis is a GUI program that allow users to view hotel reviews left by travelers. :joy:

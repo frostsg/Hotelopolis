@@ -6,13 +6,15 @@ import csv
 import nltk
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
 import os.path
-import filtering.py
+import filtering
 
 ##########Initialise values############
 window = Tk()
-data = pd.read_csv("../Filtered_Datafiniti_Hotel_Main_Review.csv")
+data = pd.read_csv("Filtered_Datafiniti_Hotel_Main_Review.csv")
 window.geometry("900x600")
 window.option_add("*Background", "white")
+window.title("Hotelopolis")
+window.iconbitmap("myicon.ico")
 senti = SentimentIntensityAnalyzer()
 
 #reviews text manager

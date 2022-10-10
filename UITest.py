@@ -7,6 +7,7 @@ import nltk
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
 import os.path
 import filtering
+import webscraper
 
 ##########Initialise values############
 window = Tk()

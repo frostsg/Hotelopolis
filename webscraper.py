@@ -48,9 +48,6 @@ def NEW_tripadvisor_ExtractReview(url):
         for i in review_box:
             # find the review 
             review = i.find_element(by=By.CSS_SELECTOR, value='.fIrGe._T').text 
-            #review = i.find_element(By.XPATH, "(//q[@class='QewHA H4 _a']/span)").text.replace("\n", " ")
-            # find the date
-            #date = i.find_element(by=By.CSS_SELECTOR, value=".teHYY._R.Me.S4.H3").text
             # save the title, date and review into csv file
             df.loc[len(df)] = [hotel_address, hotel_name, review, ' ']        
         try:
@@ -62,29 +59,6 @@ def NEW_tripadvisor_ExtractReview(url):
     # Naming the CSV file as the hotel name
     df.to_csv("Filtered_Datafiniti_Hotel_Main_Review.csv", index=False)
     webdriver.quit()
-
-def airbnb_ExtractReview(url, list1, list2, list3, list4):
-    webdriver = setupChrome()
-    webdriver.get(url)
-    webdriver.find_element(By.XPATH, "//button[@data-testid='pdp-show-all-reviews-button']").click()
-    for i in range(0, 20):
-        names = webdriver.find_elements(By.XPATH, "//h3[@elementtiming='LCP-target']")
-        for name in range(len(names)):
-            list1.append(names[name].text)
-        
-        reviews = webdriver.find_elements(By.XPATH, "//span[@class='ll4r2nl dir dir-ltr']")
-        for review in range(len(reviews)):
-            list2.append(reviews[review].text)
-        
-        dates = webdriver.find_elements(By.XPATH, "//li[@class='_1f1oir5']")
-        for date in range(len(dates)):
-            list3.append(dates[date].split)
-    webdriver.quit()
-    return list1, list2, list3, list4
-
-def booking_ExtractReview(url , list1, list2, list3, list4):
-    
-    return list1, list2, list3, list4
 
 def urlchecker(url):
     """This function is used to check the url to see which hotel website it is being used."""
@@ -105,12 +79,12 @@ def urlchecker(url):
           
 
 #urlchecker("https://www.tripadvisor.com/Hotel_Review-g298570-d555433-Reviews-Hilton_Kuala_Lumpur-Kuala_Lumpur_Wilayah_Persekutuan.html")
-urlchecker("https://www.tripadvisor.com.sg/Hotel_Review-g298570-d12621892-Reviews-EQ_Kuala_Lumpur-Kuala_Lumpur_Wilayah_Persekutuan.html")
-urlchecker("https://www.tripadvisor.com/Hotel_Review-g60763-d93525-Reviews-Sanctuary_Hotel_New_York-New_York_City_New_York.html")
-urlchecker("https://www.tripadvisor.com/Hotel_Review-g294265-d1770798-Reviews-Marina_Bay_Sands-Singapore.html")
-urlchecker("https://www.tripadvisor.com/Hotel_Review-g194856-d498287-Reviews-Hotel_Balocco-Porto_Cervo_Arzachena_Province_of_Olbia_Tempio_Sardinia.html")
-urlchecker("https://www.tripadvisor.com.sg/Hotel_Review-g294265-d302294-Reviews-Pan_Pacific_Singapore-Singapore.html")
-urlchecker("https://www.tripadvisor.com/Hotel_Review-g294265-d301468-Reviews-or3905-Mandarin_Oriental_Singapore-Singapore.html")
+#urlchecker("https://www.tripadvisor.com.sg/Hotel_Review-g298570-d12621892-Reviews-EQ_Kuala_Lumpur-Kuala_Lumpur_Wilayah_Persekutuan.html")
+#urlchecker("https://www.tripadvisor.com/Hotel_Review-g60763-d93525-Reviews-Sanctuary_Hotel_New_York-New_York_City_New_York.html")
+#urlchecker("https://www.tripadvisor.com/Hotel_Review-g294265-d1770798-Reviews-Marina_Bay_Sands-Singapore.html")
+#urlchecker("https://www.tripadvisor.com/Hotel_Review-g194856-d498287-Reviews-Hotel_Balocco-Porto_Cervo_Arzachena_Province_of_Olbia_Tempio_Sardinia.html")
+#urlchecker("https://www.tripadvisor.com.sg/Hotel_Review-g294265-d302294-Reviews-Pan_Pacific_Singapore-Singapore.html")
+#urlchecker("https://www.tripadvisor.com/Hotel_Review-g294265-d301468-Reviews-or3905-Mandarin_Oriental_Singapore-Singapore.html")
 
 #print(len(name_list), len(titles_list), len(reviews_list), len(dates_list), len(ratings_list))
 

@@ -18,33 +18,34 @@ window.title("Hotelopolis")
 window.iconbitmap("myicon.ico")
 senti = SentimentIntensityAnalyzer()
 
-#reviews text manager
+#list of reviews text gui
 ReviewsTextList=[]
-#review score /5 manager
+#list of review score /5 gui
 ReviewsScoreList=[]
-#hotel menu list
+#list of hotels on menu (button form)
 HotelMenuList=[]
-#Hotels List
+#list of hotels taken from csv
 HotelsList =[]
-#Recommended Hotels List
+#list of recommended hotels at the side when user clicks hotels
 RecommendedHotelsList=[]
-#Bookmarked List
+#list of bookmarked hotel objects to access class
 BookmarkedHotelsObjectsList=[]
-#Bookmarked name list
+#list of bookmarked hotels for dropdown menu
 BookmarkedHotelsNameList=[]
 
 #for writing bookmarks
-Bookmarkdata=None
-BookmarkDataFrame=None
+Bookmarkdata=None #if file exists, read from it
+BookmarkDataFrame=None #if file does not exist, create data frame for it
 
 #dropdown box options
 HotelOptions=[]
 for name in data["name"]: #add all hotels in csv to dropdown
-    if(pd.isnull(name)):
+    if(pd.isnull(name)): #get rid of any null cells
        continue
     if(name not in HotelOptions):
         HotelOptions.append(name)
 
+#options for sorting in dropdown menu
 SortOptions = [
     'Alphabetical A-Z',
     'Alphabetical Z-A',
@@ -55,60 +56,60 @@ SortOptions = [
 
 if(os.path.exists("Bookmarks.csv")):
     Bookmarkdata = pd.read_csv("Bookmarks.csv")
-    if(len(HotelOptions) != len(Bookmarkdata)):
+    if(len(HotelOptions) != len(Bookmarkdata)): #if csv changed, reset to all not bookmarked
         BookmarkDataFrame = pd.DataFrame(HotelOptions, columns=['name'])
         BookmarkDataFrame["bookmarked"] = False
         BookmarkDataFrame.to_csv("Bookmarks.csv")
         Bookmarkdata = pd.read_csv("Bookmarks.csv")
 else:
-    BookmarkDataFrame = pd.DataFrame(HotelOptions, columns=['name'])
+    BookmarkDataFrame = pd.DataFrame(HotelOptions, columns=['name'])  #since bookmarked csv not created, create one and set all hotels to not bookmarked
     BookmarkDataFrame["bookmarked"] = False
     BookmarkDataFrame.to_csv("Bookmarks.csv")
     Bookmarkdata = pd.read_csv("Bookmarks.csv")
 
 
 class Hotel:
-    def __init__(self, name, address, scoreslist, reviewslist, bookmarked):
+    def __init__(self, name, address, scoreslist, reviewslist, bookmarked): #initialise hotel objects
         self.Name = name
         self.Address = address
         self.ScoresList = scoreslist
         self.ReviewsList = reviewslist
+        self.Bookmarked = bookmarked
 
+        #get sentimental anayisis of hotel reviews
         analysis ={}
         analysis["Positive"] = [senti.polarity_scores(i)["pos"] for i in self.ReviewsList]
         analysis["Negative"] = [senti.polarity_scores(i)["neg"] for i in self.ReviewsList]
         self.Sentiments = analysis
-        self.Bookmarked = bookmarked
 
         TotalScore = 0.00
-        if(' ' in self.ScoresList):
+        if(' ' in self.ScoresList): #detect for hotels without given score and use sentimental analysis score to get review score
             PositiveList = list(analysis["Positive"])
             NegativeList = list(analysis["Negative"])
             for index, values in enumerate(PositiveList):
                 totalratingadded = PositiveList[index] + NegativeList[index]
                 if(totalratingadded !=0):
-                    calculated = round((PositiveList[index]/totalratingadded) * 5)
+                    calculated = round((PositiveList[index]/totalratingadded) * 5) #calculated score by adding positive and negative then divide by total, times 5(out of 5 stars)
                     self.ScoresList[index] = calculated
                     TotalScore+=calculated
         else:
             for rating in self.ScoresList:
                 TotalScore += int(rating)
 
-        self.AverageScore = TotalScore / len(self.ScoresList)
+        self.AverageScore = TotalScore / len(self.ScoresList) #calculate average score by adding all reviews score and divide by number of reviews
 
-        facilities = (facility_check(','.join(reviewslist)))
+        self.Facilities = facility_check(','.join(reviewslist)) #get facilities of hotel from finding keywords from reviews
 
-        self.Facilities = facilities
 
 
 
 #################functions#####################
-#clear current hotel details and formatting
-def ClearMainMenu():
+def ClearMainMenu(): #clear all widgets on main menu
     MainMenuFrame.grid_forget()
     FilterFrame.grid_forget()
 
-def ClearHotelDetails():
+#
+def ClearHotelDetails(): #clear all widgets on hotel details
     RecommendationFrame.grid_forget()
     HotelDetailsFrame.grid_forget()
     MenuButton.grid_forget()
@@ -120,7 +121,7 @@ def ClearHotelDetails():
     ReviewsTextList.clear()
     ReviewsScoreList.clear()
 
-def ToggleBookmark():
+def ToggleBookmark(): #toggle bookmarked status of current hotel
     currenthotelname = HotelNameLabel.cget("text")
     for hotel in HotelsList:
         if(hotel.Name == currenthotelname):
@@ -137,19 +138,19 @@ def ToggleBookmark():
                     BookmarkedHotelsNameList.append("No Bookmarks")
 
             Bookmarkdata.loc[Bookmarkdata.name == hotel.Name, "bookmarked"] = hotel.Bookmarked
-            Bookmarkdata.to_csv("Bookmarks.csv", index= False)
-
+            Bookmarkdata.to_csv("Bookmarks.csv", index= False) #update csv based on new bookmarks
 
     BookmarkDropdown["menu"].delete(0, 'end')
     for hotel in BookmarkedHotelsNameList:
-        BookmarkDropdown["menu"].add_command(label= hotel, command=lambda hotel = hotel:SelectFromBookmark(hotel))
+        BookmarkDropdown["menu"].add_command(label= hotel, command=lambda hotel = hotel:SelectFromBookmark(hotel))  #update bookmark dropdown
 
-def FilterAndSortHotelDetails(sortoption = None):
-    for HotelButton in HotelMenuList:
+def FilterAndSortHotelDetails(sortoption = None): #update main menu based on filter and sort options
+    for HotelButton in HotelMenuList: #destroy all buttons as we will create them based on all the filter and sort options
         HotelButton.destroy()
 
-    HotelMenuList.clear()
+    HotelMenuList.clear() #clear list of hotel buttons as they all are destroyed
 
+    #create list to check which ameneties user selected
     amenetiesselectedlist = []
     if(restaurant.get() != "na"):
         amenetiesselectedlist.append(restaurant.get())
@@ -162,7 +163,7 @@ def FilterAndSortHotelDetails(sortoption = None):
     if (spa.get() != "na"):
         amenetiesselectedlist.append(spa.get())
 
-
+    #sort list to be displayed based on user selected sort
     if(SortVariable.get() == 'Alphabetical A-Z'):
         SortedList = sorted(HotelsList, key= lambda x:x.Name)
     elif(SortVariable.get() == 'Alphabetical Z-A'):
@@ -173,19 +174,19 @@ def FilterAndSortHotelDetails(sortoption = None):
         SortedList = sorted(HotelsList, key=lambda x: x.AverageScore)
 
 
-
-    if(onestar.get() == 0 and twostar.get() == 0 and threestar.get() == 0 and fourstar.get() == 0 and fivestar.get() == 0):
+    #create buttons based on sorted list, ameneties selected and filtering options
+    if(onestar.get() == 0 and twostar.get() == 0 and threestar.get() == 0 and fourstar.get() == 0 and fivestar.get() == 0): #if no star filter selected
         for index, hotel in enumerate(SortedList):
-            if (len(amenetiesselectedlist) > 0 and not any(x in hotel.Facilities for x in amenetiesselectedlist)):
+            if (len(amenetiesselectedlist) > 0 and not any(x in hotel.Facilities for x in amenetiesselectedlist)): #if hotel does not have selected ameneites, skip it and dont create a button
                 continue
             facilitieslist = ', '.join(hotel.Facilities)
             HotelMenuButton = Button(MainMenuFrame, text=hotel.Name + "\n"+hotel.Address + "\n Average Score: %0.2f" % hotel.AverageScore + "\n Facilities: " + facilitieslist,
                                      command=lambda hotel=hotel: DisplayHotelDetails(hotel), width=80, height=6, font=("Arial", 10), relief=GROOVE)
             HotelMenuButton.grid(row=index+1, column=0, sticky=N, pady=10, padx=10)
-            HotelMenuList.append(HotelMenuButton)
+            HotelMenuList.append(HotelMenuButton) #add hotel button back into list
     else:
-        for index, hotel in enumerate(SortedList):
-            if (len(amenetiesselectedlist) > 0 and not any(x in hotel.Facilities for x in amenetiesselectedlist)):
+        for index, hotel in enumerate(SortedList): #else if star filter selected, create buttons based on star filter
+            if (len(amenetiesselectedlist) > 0 and not any(x in hotel.Facilities for x in amenetiesselectedlist)): #if hotel does not have selected ameneites, skip it and dont create a button
                 continue
             facilitieslist = ', '.join(hotel.Facilities)
             if(int(hotel.AverageScore) == onestar.get() or int(hotel.AverageScore) == twostar.get() or int(hotel.AverageScore) == threestar.get() or int(hotel.AverageScore) == fourstar.get() or int(hotel.AverageScore) == fivestar.get()):
@@ -194,26 +195,28 @@ def FilterAndSortHotelDetails(sortoption = None):
                 HotelMenuList.append(HotelMenuButton)
 
 
-
+    #show no results label if completely empty
     if(len(HotelMenuList) == 0):
         Emptylabel.grid(row= 1, column=0, sticky=N, pady=0)
     else:
-        Emptylabel.grid_forget()
+        Emptylabel.grid_forget()#clear no result label if there are hotels to display
 
     UpdateScrollbar()
 
-def SelectFromBookmark(selectedbookmark):
+def SelectFromBookmark(selectedbookmark): #called when u select a hotel from the bookmark dropdown. It will call displayhoteldetails function based on selection
     for hotel in BookmarkedHotelsObjectsList:
         if(hotel.Name == selectedbookmark):
             DisplayHotelDetails(hotel)
             break
-    BookmarkNameVariable.set("Bookmarks")
+    BookmarkNameVariable.set("Bookmarks") #reset bookmark dropdown title
 
-def UpdateRecommendations(hotel):
-    for HotelButton in RecommendedHotelsList:
+def UpdateRecommendations(hotel): #display recommendations at side of hotel details
+    for HotelButton in RecommendedHotelsList: #destroy all buttons recommended before to refresh with new ones
         HotelButton.destroy()
+
+    RecommendedHotelsList.clear()
     for index, otherhotel in enumerate(HotelsList):
-        if (math.ceil(otherhotel.AverageScore) >= round(hotel.AverageScore) and otherhotel.Name != hotel.Name):
+        if (math.ceil(otherhotel.AverageScore) >= round(hotel.AverageScore) and otherhotel.Name != hotel.Name): #check for hotels with similar of higher star ratings to recommend
             RecoHotelMenuButton = Button(RecommendationFrame, text=otherhotel.Name + "\n Average Score: %0.2f" % otherhotel.AverageScore,
                                      command=lambda otherhotel=otherhotel: DisplayHotelDetails(otherhotel), width=26, height=6, font=("Arial", 10), relief=GROOVE, wraplength=200)
             RecoHotelMenuButton.grid(row=index+1, column=0, sticky=N, pady=10, padx= 10)
@@ -229,28 +232,32 @@ def UpdateScrollbar():
     MainCanvas.yview_moveto(0)
 
 def DisplayMainMenu():
-    ClearHotelDetails()
+    ClearHotelDetails() #clear hoteldetails gui and show main menu gui
     FilterFrame.grid(row=1, column=0, sticky=N, padx=40)
     MainMenuFrame.grid(row=1, column=1, sticky=N)
     UpdateScrollbar()
 
 #logic for UI display, it clears details and reformats it for the new hotel
 def DisplayHotelDetails(hotel):
-    ClearHotelDetails()
-    ClearMainMenu()
+    ClearHotelDetails() #clear details of old displayed hotel as we will update new one with new widgets
+    ClearMainMenu() #clear main menu
 
+    #configure hotel name label
     HotelNameLabel.config(text=hotel.Name)
     HotelNameLabel.grid(row=0, column=0, sticky=NW)
 
+    # configure hotel address label
     AddressLabel.config(text=("Address: " + hotel.Address))
     AddressLabel.grid(row=1, column=0, sticky=NW)
 
+    # configure bookmarked status of hotel
     BookmarkedVariable.set(hotel.Bookmarked)
 
+    # configure hotel average score /5
     AverageScoreLabel.config(text= "Score: %0.2f"%hotel.AverageScore+ "/5")
     AverageScoreLabel.grid(row=2, column=0, sticky=NW)
 
-    #table heading
+    #heading for reviews
     ReviewListHeaderStars = Label(HotelReviewFrame, text="Rating")
     ReviewListHeaderText = Label(HotelReviewFrame, text="Reviews")
     ReviewListHeaderStars.grid(row=3,column=0, sticky=NW)
@@ -264,17 +271,17 @@ def DisplayHotelDetails(hotel):
         ReviewsScoreText.grid(row=index +4, column=0, sticky=NW)
         ReviewsScoreList.append(ReviewsScoreText)
 
-        # review text
+    #display review text
     for index, review in enumerate(hotel.ReviewsList):
         ReviewsText = Label(HotelReviewFrame, text=review, justify=LEFT)
         ReviewsText.grid(row=index + 4, column=1, sticky=NW)
         ReviewsTextList.append(ReviewsText)
 
 
-        #temporary
-    SentimentalScoresLabel = Label(HotelReviewFrame, text="Scores(Pos, Neg, Neu)")
+    #temporary display for sentimental analysis score for each review
+    SentimentalScoresLabel = Label(HotelReviewFrame, text="Scores(Pos, Neg")
     SentimentalScoresLabel.grid(row=3, column=2)
-        # sentimental analysis data
+    # sentimental analysis data
     for index, sentimentalscore in enumerate(hotel.Sentiments["Positive"]):
         SentimentText = Label(HotelReviewFrame, text=sentimentalscore, justify=LEFT)
         SentimentText.grid(row=index + 4, column=2, sticky=W)
@@ -285,7 +292,8 @@ def DisplayHotelDetails(hotel):
         SentimentText.grid(row=index + 4, column=3, sticky=W)
         ReviewsTextList.append(SentimentText)
 
-    UpdateRecommendations(hotel)
+    UpdateRecommendations(hotel) #call update recommendations to show hotels with similar or better ratings
+    #show widgets needed for hotel details
     RecommendationFrame.grid(row=1, column=0, padx=40, sticky=N)
     HotelDetailsFrame.grid(row=1, column=1, sticky=N)
     MenuButton.grid(row=0, column=0, padx=35, pady=20, sticky=NE)
@@ -311,44 +319,69 @@ for i in HotelOptions:
 MainFrame = Frame(master=window)
 MainFrame.pack(side=LEFT, fill=BOTH, expand=1)
 
-#canvas for reviews
+#canvas for everything
 MainCanvas = Canvas(master=MainFrame)
 VScrollbar = Scrollbar(master=MainFrame, orient=VERTICAL, command=MainCanvas.yview)
 HScrollbar = Scrollbar(master=MainFrame, orient=HORIZONTAL, command=MainCanvas.xview)
-
+#scrollbar
 VScrollbar.pack(side=RIGHT, fill=Y)
 HScrollbar.pack(side=BOTTOM, fill=X)
 
-#Frame for reviews
+#Frame for everything
 ContentFrame= Frame(MainCanvas)
 MainCanvas.create_window((0,0), window=ContentFrame, anchor=NW)
 MainCanvas.configure(xscrollcommand=HScrollbar.set, yscrollcommand=VScrollbar.set)
 MainCanvas.pack(side=LEFT, fill=BOTH, expand=1)
 
-#Filter Frame
+#App Title
+AppTitleLabel = Label(ContentFrame, text="HOTELOPOLIS", font=("Arial", 40), anchor=CENTER)
+AppTitleLabel.grid(row=0, column=1)
+
+#Filter frame for filtering hotels
 FilterFrame = Frame(master=ContentFrame, highlightbackground="black", highlightthickness=1, padx=10, pady=5)
 
-#Recommendation Frame
+#Recommendation frame for recommended hotels
 RecommendationFrame = Frame(master=ContentFrame, highlightbackground="black", highlightthickness=1,padx=10, pady=5)
 
 #Frame for hotel buttons, hotel info
 MainMenuFrame = Frame(master=ContentFrame)
 
-#Frame for Hotels and reviews
+#Frame for hotel details
 HotelDetailsFrame = Frame(master=ContentFrame, highlightbackground="black", highlightthickness=1,padx=10, pady=5)
 
+#Frame for display of hotel name, and bookmark and address
 HotelDescriptionFrame = Frame(master=HotelDetailsFrame)
 HotelDescriptionFrame.grid(row=0, column=0, sticky=NW)
+
+#Frame for display of hotel name, and bookmark
 HotelNameFrame = Frame(master=HotelDescriptionFrame)
 HotelNameFrame.grid(row=0, column=0, sticky=NW)
+
+#Frame for reviews
 HotelReviewFrame =  Frame(master=HotelDetailsFrame)
 HotelReviewFrame.grid(row=1, column=0, sticky=NW)
 
+#Recommendation Label
+RecommendationLabel = Label(RecommendationFrame, text="You may also like:")
+RecommendationLabel.grid(row=0, column=0)
 
-#Title
-AppTitleLabel = Label(ContentFrame, text="HOTELOPOLIS", font=("Arial", 40), anchor=CENTER)
-AppTitleLabel.grid(row=0, column=1)
+#Back to menu Button
+MenuButton = Button(ContentFrame, text="Back To Menu", command=DisplayMainMenu,font=("Arial", 10), relief=GROOVE)
 
+#Hotel name label in display hotel options
+HotelNameLabel = Label(HotelNameFrame, font=("Arial", 30))
+
+#Address label in display hotel options
+AddressLabel = Label(HotelDescriptionFrame, text="",font=("Arial", 15))
+
+#average star review label in display hotel options
+AverageScoreLabel = Label(HotelDescriptionFrame, text="",font=("Arial", 15))
+
+#No results label in main menu
+Emptylabel = Label(MainMenuFrame,text="No Results", font=("Arial", 20))
+
+#filter options
+FilterLabel = Label(FilterFrame, text="Filters", font=("Arial", 20))
 #filter variables
 restaurant=StringVar()
 jacuzzi=StringVar()
@@ -356,8 +389,7 @@ pool=StringVar()
 gym=StringVar()
 spa=StringVar()
 
-#filter options
-FilterLabel = Label(FilterFrame, text="Filters", font=("Arial", 20))
+#Label for ameneties and checkboxes for ameneties filter
 AmenitiesLabel = Label(FilterFrame, text="Amenities", font=("Arial", 15))
 RestaurantFilter = Checkbutton(FilterFrame, text="Restaurant", variable=restaurant, onvalue="restaurant", offvalue= "na", command=FilterAndSortHotelDetails)
 JacuzziFilter = Checkbutton(FilterFrame, text="Jacuzzi", variable=jacuzzi, onvalue="jacuzzi", offvalue= "na", command=FilterAndSortHotelDetails)
@@ -371,26 +403,7 @@ PoolFilter.deselect()
 GymFilter.deselect()
 SpaFilter.deselect()
 
-
-#Recommendation Label
-RecommendationLabel = Label(RecommendationFrame, text="You may also like:")
-RecommendationLabel.grid(row=0, column=0)
-
-#Menu Button
-MenuButton = Button(ContentFrame, text="Back To Menu", command=DisplayMainMenu,font=("Arial", 10), relief=GROOVE)
-
-#Hotel name label
-HotelNameLabel = Label(HotelNameFrame, font=("Arial", 30))
-
-#Address label
-AddressLabel = Label(HotelDescriptionFrame, text="",font=("Arial", 15))
-
-#average star review label
-AverageScoreLabel = Label(HotelDescriptionFrame, text="",font=("Arial", 15))
-
-#Hotel name label
-Emptylabel = Label(MainMenuFrame,text="No Results", font=("Arial", 20))
-
+#Label for ratings and checkboxes for rating filter
 RatingLabel = Label(FilterFrame, text="Rating", font=("Arial", 15))
 onestar=IntVar()
 twostar=IntVar()
@@ -419,27 +432,34 @@ ThreeStarFilter.grid(row=11, column=0, sticky=W)
 FourStarFilter.grid(row=12, column=0, sticky=W)
 FiveStarFilter.grid(row=13, column=0, sticky=W)
 
+# set default value of sort
 SortVariable = StringVar()
-SortVariable.set(SortOptions[0]) # default value
-
+SortVariable.set(SortOptions[0])
+#add frame for sort widgets
 SortFrame = Frame(master=MainMenuFrame, padx=10, pady=5)
 SortFrame.grid(row=0, column=0, sticky=NW)
 SortLabel = Label(SortFrame, text="Sort by:", font=("Arial", 14))
 SortLabel.grid(row=0, column=0, sticky=NW)
+#create sort dropdown
 SortDropdown = OptionMenu(SortFrame, SortVariable, *SortOptions, command=FilterAndSortHotelDetails)
 SortDropdown.grid(row=0, column=1, sticky=NW)
 
+#set default value for bookmark widget
 BookmarkNameVariable = StringVar()
-BookmarkNameVariable.set("Bookmarks") # default value
-if (len(BookmarkedHotelsNameList) == 0):
+BookmarkNameVariable.set("Bookmarks")
+if (len(BookmarkedHotelsNameList) == 0): #give default list of bookmarks no bookmarks if no bookmarked hotels
     BookmarkedHotelsNameList.append("No Bookmarks")
+# create bookmark dropdown
 BookmarkDropdown = OptionMenu(ContentFrame, BookmarkNameVariable, *BookmarkedHotelsNameList, command=SelectFromBookmark)
 BookmarkDropdown.grid(row=0, column=0, sticky=W, padx=40)
 
+#bookmarked checkbutton in display hotel details
 BookmarkedVariable = BooleanVar()
 BookmarkedButton = Checkbutton(HotelNameFrame, text="Bookmarked", variable=BookmarkedVariable, onvalue=1, offvalue= 0, command=ToggleBookmark)
 BookmarkedButton.grid(row=0, column=1, sticky=W)
 
+#sort and filter main menu based on default values
 FilterAndSortHotelDetails(SortVariable)
+#show main menu widgets
 DisplayMainMenu()
 window.mainloop()

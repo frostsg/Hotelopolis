@@ -77,7 +77,7 @@ for url in urlList:
 #convert list to csv
 data =list(zip(hotelname_list, address_list, review_list))
 reviews = pd.DataFrame(data,columns=['name', 'address', 'review.text'])
-reviews.to_csv('hotel_reviews.csv', index=False, header=True)
+reviews.to_csv('main_hotel_dataset.csv', index=False, header=True)
 
 
 

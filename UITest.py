@@ -7,16 +7,18 @@ import nltk
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
 import os.path
 from filtering import *
-import webscraper
+from webscraper import *
+from PIL import ImageTk, Image
 
 ##########Initialise values############
 window = Tk()
 data = pd.read_csv("Filtered_Datafiniti_Hotel_Main_Review.csv")
 window.geometry("900x600")
-window.option_add("*Background", "white")
+window.option_add("*Background", "#fff6ec")
 window.title("Hotelopolis")
-window.iconbitmap("myicon.ico")
+window.iconbitmap("hotelopolis.ico")
 senti = SentimentIntensityAnalyzer()
+image = ImageTk.PhotoImage(Image.open("hotelopolis.png"))
 
 #list of reviews text gui
 ReviewsTextList=[]
@@ -254,7 +256,7 @@ def DisplayHotelDetails(hotel):
     BookmarkedVariable.set(hotel.Bookmarked)
 
     # configure hotel average score /5
-    AverageScoreLabel.config(text= "Score: %0.2f"%hotel.AverageScore+ "/5")
+    AverageScoreLabel.config(text= "Star Rating: %0.2f"%hotel.AverageScore+ "/5")
     AverageScoreLabel.grid(row=2, column=0, sticky=NW)
 
     #heading for reviews

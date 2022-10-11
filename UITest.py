@@ -6,7 +6,7 @@ import csv
 import nltk
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
 import os.path
-import filtering
+from filtering import *
 import webscraper
 
 ##########Initialise values############
@@ -52,18 +52,19 @@ SortOptions = [
     'Rating (Low to High)'
     ]
 
-if(os.path.exists("../Bookmarks.csv")):
-    Bookmarkdata = pd.read_csv("../Bookmarks.csv")
+
+if(os.path.exists("Bookmarks.csv")):
+    Bookmarkdata = pd.read_csv("Bookmarks.csv")
     if(len(HotelOptions) != len(Bookmarkdata)):
         BookmarkDataFrame = pd.DataFrame(HotelOptions, columns=['name'])
         BookmarkDataFrame["bookmarked"] = False
-        BookmarkDataFrame.to_csv("../Bookmarks.csv")
-        Bookmarkdata = pd.read_csv("../Bookmarks.csv")
+        BookmarkDataFrame.to_csv("Bookmarks.csv")
+        Bookmarkdata = pd.read_csv("Bookmarks.csv")
 else:
     BookmarkDataFrame = pd.DataFrame(HotelOptions, columns=['name'])
     BookmarkDataFrame["bookmarked"] = False
-    BookmarkDataFrame.to_csv("../Bookmarks.csv")
-    Bookmarkdata = pd.read_csv("../Bookmarks.csv")
+    BookmarkDataFrame.to_csv("Bookmarks.csv")
+    Bookmarkdata = pd.read_csv("Bookmarks.csv")
 
 
 class Hotel:
@@ -94,6 +95,11 @@ class Hotel:
                 TotalScore += int(rating)
 
         self.AverageScore = TotalScore / len(self.ScoresList)
+
+        facilities = (facility_check(','.join(reviewslist)))
+
+        self.Facilities = facilities
+
 
 
 #################functions#####################
@@ -131,7 +137,7 @@ def ToggleBookmark():
                     BookmarkedHotelsNameList.append("No Bookmarks")
 
             Bookmarkdata.loc[Bookmarkdata.name == hotel.Name, "bookmarked"] = hotel.Bookmarked
-            Bookmarkdata.to_csv("../Bookmarks.csv", index= False)
+            Bookmarkdata.to_csv("Bookmarks.csv", index= False)
 
 
     BookmarkDropdown["menu"].delete(0, 'end')
@@ -144,6 +150,19 @@ def FilterAndSortHotelDetails(sortoption = None):
 
     HotelMenuList.clear()
 
+    amenetiesselectedlist = []
+    if(restaurant.get() != "na"):
+        amenetiesselectedlist.append(restaurant.get())
+    if (pool.get() != "na"):
+        amenetiesselectedlist.append(pool.get())
+    if (jacuzzi.get() != "na"):
+        amenetiesselectedlist.append(jacuzzi.get())
+    if(gym.get()!="na"):
+        amenetiesselectedlist.append(gym.get())
+    if (spa.get() != "na"):
+        amenetiesselectedlist.append(spa.get())
+
+
     if(SortVariable.get() == 'Alphabetical A-Z'):
         SortedList = sorted(HotelsList, key= lambda x:x.Name)
     elif(SortVariable.get() == 'Alphabetical Z-A'):
@@ -153,18 +172,28 @@ def FilterAndSortHotelDetails(sortoption = None):
     elif (SortVariable.get() == 'Rating (Low to High)'):
         SortedList = sorted(HotelsList, key=lambda x: x.AverageScore)
 
+
+
     if(onestar.get() == 0 and twostar.get() == 0 and threestar.get() == 0 and fourstar.get() == 0 and fivestar.get() == 0):
         for index, hotel in enumerate(SortedList):
-            HotelMenuButton = Button(MainMenuFrame, text=hotel.Name + "\n"+hotel.Address + "\n Average Score: %0.2f" % hotel.AverageScore,
+            if (len(amenetiesselectedlist) > 0 and not any(x in hotel.Facilities for x in amenetiesselectedlist)):
+                continue
+            facilitieslist = ', '.join(hotel.Facilities)
+            HotelMenuButton = Button(MainMenuFrame, text=hotel.Name + "\n"+hotel.Address + "\n Average Score: %0.2f" % hotel.AverageScore + "\n Facilities: " + facilitieslist,
                                      command=lambda hotel=hotel: DisplayHotelDetails(hotel), width=80, height=6, font=("Arial", 10), relief=GROOVE)
             HotelMenuButton.grid(row=index+1, column=0, sticky=N, pady=10, padx=10)
             HotelMenuList.append(HotelMenuButton)
     else:
         for index, hotel in enumerate(SortedList):
+            if (len(amenetiesselectedlist) > 0 and not any(x in hotel.Facilities for x in amenetiesselectedlist)):
+                continue
+            facilitieslist = ', '.join(hotel.Facilities)
             if(int(hotel.AverageScore) == onestar.get() or int(hotel.AverageScore) == twostar.get() or int(hotel.AverageScore) == threestar.get() or int(hotel.AverageScore) == fourstar.get() or int(hotel.AverageScore) == fivestar.get()):
-                HotelMenuButton = Button(MainMenuFrame, text=hotel.Name + "\n"+hotel.Address +"\n Average Score: %0.2f" % hotel.AverageScore, command=lambda hotel=hotel: DisplayHotelDetails(hotel), width=80, height=6, font=("Arial", 10), relief=GROOVE)
+                HotelMenuButton = Button(MainMenuFrame, text=hotel.Name + "\n"+hotel.Address +"\n Average Score: %0.2f" % hotel.AverageScore + "\n Facilities: " + facilitieslist, command=lambda hotel=hotel: DisplayHotelDetails(hotel), width=80, height=6, font=("Arial", 10), relief=GROOVE)
                 HotelMenuButton.grid(row=index + 2, column=0, sticky=N, pady=10, padx=10)
                 HotelMenuList.append(HotelMenuButton)
+
+
 
     if(len(HotelMenuList) == 0):
         Emptylabel.grid(row= 1, column=0, sticky=N, pady=0)
@@ -321,20 +350,26 @@ AppTitleLabel = Label(ContentFrame, text="HOTELOPOLIS", font=("Arial", 40), anch
 AppTitleLabel.grid(row=0, column=1)
 
 #filter variables
-restaurant=IntVar()
-jacuzzi=IntVar()
-pool=IntVar()
-gym=IntVar()
-spa=IntVar()
+restaurant=StringVar()
+jacuzzi=StringVar()
+pool=StringVar()
+gym=StringVar()
+spa=StringVar()
 
 #filter options
 FilterLabel = Label(FilterFrame, text="Filters", font=("Arial", 20))
 AmenitiesLabel = Label(FilterFrame, text="Amenities", font=("Arial", 15))
-RestaurantFilter = Checkbutton(FilterFrame, text="Restaurant", variable=restaurant)
-JacuzziFilter = Checkbutton(FilterFrame, text="Jacuzzi", variable=jacuzzi)
-PoolFilter = Checkbutton(FilterFrame, text="Pool", variable=pool)
-GymFilter = Checkbutton(FilterFrame, text="Gym", variable=gym)
-SpaFilter = Checkbutton(FilterFrame, text="Gym", variable=spa)
+RestaurantFilter = Checkbutton(FilterFrame, text="Restaurant", variable=restaurant, onvalue="restaurant", offvalue= "na", command=FilterAndSortHotelDetails)
+JacuzziFilter = Checkbutton(FilterFrame, text="Jacuzzi", variable=jacuzzi, onvalue="jacuzzi", offvalue= "na", command=FilterAndSortHotelDetails)
+PoolFilter = Checkbutton(FilterFrame, text="Pool", variable=pool, onvalue="pool", offvalue= "na", command=FilterAndSortHotelDetails)
+GymFilter = Checkbutton(FilterFrame, text="Gym", variable=gym, onvalue="gym", offvalue= "na", command=FilterAndSortHotelDetails)
+SpaFilter = Checkbutton(FilterFrame, text="Spa", variable=spa, onvalue="spa", offvalue= "na", command=FilterAndSortHotelDetails)
+#deselect checkboxes, string var makes it select by default
+RestaurantFilter.deselect()
+JacuzziFilter.deselect()
+PoolFilter.deselect()
+GymFilter.deselect()
+SpaFilter.deselect()
 
 
 #Recommendation Label

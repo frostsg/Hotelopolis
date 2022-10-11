@@ -176,10 +176,11 @@ Bad: We hated the window were fake. Good: I liked the location the most
 
 # reference lists
 restaurant_list = ['Restaurant', 'Food', 'Coffee', 'Tea', 'Breakfast', 'Lunch', 'Dinner', 'Buffet']  # ref list for restaurant filter
-pool_list = ['Pool', 'Swimming', 'Jacuzzi', 'Hot tub', 'Tub']  # ref list for pool filter
+pool_list = ['Pool', 'Swimming']
+jacuzzi_list = ['Jacuzzi', 'Hot tub', 'Tub']  # ref list for pool filter
 gym_list = ['Gym', 'workout', 'exercise', 'treadmill', 'dumbbells']  # ref list for gym filter
 spa_list = ['Spa', 'health', 'sauna', 'massage']  # ref list for spa filter
-facility_options = {1: restaurant_list, 2: pool_list, 3: gym_list, 4: spa_list}
+facility_options = {1: restaurant_list, 2: pool_list, 3: jacuzzi_list,  4: gym_list, 5: spa_list}
 neg_emotions = ['unaffordable', 'disgusting', 'bad', 'poor', 'expensive', 'dirty', 'sad', 'uncomfortable', 'rude','hassle', 'horrible', 'noisy']
 pos_emotions = ['affordable', 'good', 'comfortable', 'nice', 'beautiful', 'luxury', 'happy', 'joy', 'lovely','friendly', 'helpful', 'pleasant', 'awesome']
 
@@ -205,10 +206,9 @@ def remove_no(list1):
             break
     return(list1)
 
-def tokenize(tokens):
+def tokenize(reviewlist):
     # breaks down significant words in the review to tokens using nlp
-    global review
-    review = review.lower()  # change case to lower
+    review = reviewlist.lower()  # change case to lower
     tokens = word_tokenize(review)  # nlp, split para or sentence to smaller units (strings) into a list
     remove_no(tokens) # to avoid discrepancy like "no pool", "no gym"
     stop_words = set(stopwords.words('english'))  # remove unimpt words e.g 'a, the, for, to'
@@ -216,12 +216,12 @@ def tokenize(tokens):
     tokens = [*set(tokens)]  # remove duplicate words
     return tokens
 
-def facility_check(facility_list):
+def facility_check(reviewlist):
     facility_list=[]
-    global review, restaurant_list, gym_list, spa_list, pool_list, facility_options
+    #global review, restaurant_list, gym_list, spa_list, pool_list, facility_options
 
     # NLP to convert review into tokens
-    tokens=tokenize(review)
+    tokens=tokenize(reviewlist)
 
     # user options 1 for restaurant, 2 - pool, 3 - Gym, 4 - Sauna
     options = range(1, 5)
@@ -240,17 +240,15 @@ def facility_check(facility_list):
             break
     return facility_list
 
-for i in (facility_check(review)):
-    print(i)
-
-# OPTIONAL - wordcloud including all emotions mentioned in review
-aspects = (list(set(tokenize(review)).intersection(pos_emotions + neg_emotions)))
-frequency_dist = nltk.FreqDist(aspects)
-wordcloud = WordCloud().generate_from_frequencies(frequency_dist)
-plt.imshow(wordcloud)
-plt.axis("off")
-# uncomment below for word cloud to appear
-plt.show()
+def showwordcloud():
+    # OPTIONAL - wordcloud including all emotions mentioned in review
+    aspects = (list(set(tokenize(review)).intersection(pos_emotions + neg_emotions)))
+    frequency_dist = nltk.FreqDist(aspects)
+    wordcloud = WordCloud().generate_from_frequencies(frequency_dist)
+    plt.imshow(wordcloud)
+    plt.axis("off")
+    # uncomment below for word cloud to appear
+    plt.show()
 
 """
 

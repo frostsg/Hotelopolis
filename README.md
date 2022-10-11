@@ -1,5 +1,5 @@
 # Hotelopolis
-![alt text <](hotelopolis.ico)
+![alt text <](icon/hotelopolis.ico)
 
 ## Description 
 Hotelopolis is a GUI program that allow users to view hotel reviews left by travelers. 
@@ -15,11 +15,11 @@ Hotelopolis have features such as:
 
 ## How to install and run this project
 To install the required libraries, just enter:
-```Powershell
+```bash
 pip install -r requirements.txt
 ```
 To run this project
-```Powershell
+```bash
 python main.py
 ```
 

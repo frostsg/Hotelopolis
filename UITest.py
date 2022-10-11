@@ -338,6 +338,16 @@ AppTitleLabel = Label(ContentFrame, text="HOTELOPOLIS", font=("Arial", 40), anch
 AppTitleLabel.grid(row=0, column=1)
 
 #Filter frame for filtering hotels
+# Function for scrolling using mouse wheel
+def _on_mouse_wheel(event):
+    MainCanvas.yview_scroll(-1 * int((event.delta / 120)), "units")
+
+#Mouse Wheel scrolling implementation
+MainCanvas.configure(yscrollcommand=VScrollbar.set)
+MainCanvas.bind('<Configure>', lambda e: MainCanvas.configure(scrollregion = MainCanvas.bbox("all")))
+MainCanvas.bind_all("<MouseWheel>", _on_mouse_wheel)
+
+#Filter Frame
 FilterFrame = Frame(master=ContentFrame, highlightbackground="black", highlightthickness=1, padx=10, pady=5)
 
 #Recommendation frame for recommended hotels

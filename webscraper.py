@@ -3,14 +3,11 @@ This library webscrap hotel reviews from tripadvisor.com and save it into a csv 
 Done by frostsg
 """
 from selenium import webdriver
-from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
 from selenium.common.exceptions import ElementClickInterceptedException
 from selenium.webdriver.support import expected_conditions as EC
 import pandas as pd
 import time
-import csv
 
 def setupChrome():
     """This is a function to setup the webdriver to use chrome for automation"""
@@ -56,8 +53,9 @@ def NEW_tripadvisor_ExtractReview(url):
             break
     # replacing the spaces in hotel_name with _
     hotel_name = hotel_name.replace(" ", "_")
-    # Naming the CSV file as the hotel name
+    # Updating the CSV file 
     df.to_csv("Filtered_Datafiniti_Hotel_Main_Review.csv", index=False)
+    # Stopping the webdriver
     webdriver.quit()
 
 def urlchecker(url):
@@ -85,8 +83,4 @@ def urlchecker(url):
 #urlchecker("https://www.tripadvisor.com/Hotel_Review-g194856-d498287-Reviews-Hotel_Balocco-Porto_Cervo_Arzachena_Province_of_Olbia_Tempio_Sardinia.html")
 #urlchecker("https://www.tripadvisor.com.sg/Hotel_Review-g294265-d302294-Reviews-Pan_Pacific_Singapore-Singapore.html")
 #urlchecker("https://www.tripadvisor.com/Hotel_Review-g294265-d301468-Reviews-or3905-Mandarin_Oriental_Singapore-Singapore.html")
-
-#print(len(name_list), len(titles_list), len(reviews_list), len(dates_list), len(ratings_list))
-
-
 

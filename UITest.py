@@ -16,9 +16,9 @@ data = pd.read_csv("Filtered_Datafiniti_Hotel_Main_Review.csv")
 window.geometry("900x600")
 window.option_add("*Background", "#fff6ec")
 window.title("Hotelopolis")
-window.iconbitmap("hotelopolis.ico")
+window.iconbitmap("icon/hotelopolis.ico")
 senti = SentimentIntensityAnalyzer()
-image = ImageTk.PhotoImage(Image.open("hotelopolis.png"))
+#image = ImageTk.PhotoImage(Image.open("icon/hotelopolis.png"))
 
 #list of reviews text gui
 ReviewsTextList=[]

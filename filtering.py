@@ -14,8 +14,10 @@ jacuzzi_list = ['Jacuzzi', 'Hot tub', 'Tub']  # ref list for pool filter
 gym_list = ['Gym', 'workout', 'exercise', 'treadmill', 'dumbbells']  # ref list for gym filter
 spa_list = ['Spa', 'health', 'sauna', 'massage']  # ref list for spa filter
 facility_options = {1: restaurant_list, 2: pool_list, 3: jacuzzi_list,  4: gym_list, 5: spa_list}
-neg_emotions = ['unaffordable', 'disgusting', 'bad', 'poor', 'expensive', 'dirty', 'sad', 'uncomfortable', 'rude','hassle', 'horrible', 'noisy']
-pos_emotions = ['affordable', 'good', 'comfortable', 'nice', 'beautiful', 'luxury', 'happy', 'joy', 'lovely','friendly', 'helpful', 'pleasant', 'awesome']
+neg_emotions = ['noisy','unaffordable', 'disgusting', 'poor', 'expensive', 'dirty', 'uncomfortable', 'rude','hassle', 'horrible', 'noisy']
+pos_emotions = ['great','relaxing','perfect','high quality','wonderful','affordable','clean', 'comfort', 'comfortable', 'beautiful', 'luxury', 'happy', 'joy', 'lovely','friendly', 'helpful', 'pleasant', 'awesome']
+other_facilities=['staff','location','wifi','beds','rooms','bathroom', 'kitchen', ]
+aspect_list=restaurant_list+pool_list+jacuzzi_list+gym_list+spa_list+neg_emotions+pos_emotions+other_facilities
 
 # check if 2 lists have common item or not
 def common_item(x, y):
@@ -44,7 +46,7 @@ def tokenize(reviewlist):
     review = reviewlist.lower()  # change case to lower
     tokens = word_tokenize(review)  # nlp, split para or sentence to smaller units (strings) into a list
     remove_no(tokens) # to avoid discrepancy like "no pool", "no gym"
-    stop_words = set(stopwords.words('english'))  # remove unimpt words e.g 'a, the, for, to'
+    stop_words = set(stopwords.words('english'))  # set of stopwords (approx. 40) in english language
     tokens = [word for word in tokens if not word in stop_words]  # remove unimpt words e.g 'a, the, for, to'
     tokens = [*set(tokens)]  # remove duplicate words
     return tokens
@@ -57,12 +59,11 @@ def facility_check(reviewlist):
     tokens=tokenize(reviewlist)
 
     # user options 1 for restaurant, 2 - pool, 3 - Gym, 4 - Sauna
-    options = range(1, 5)
     counter = 0
     # if user input is 1, then it compares review words with strings in restaurant list "1:restaurant_list"
     for key in facility_options:  # if key of the ref list matches with user option
         counter += 1
-        if key == counter and counter <= 4:
+        if key == counter and counter <= 5:
             fac_list = ([x.lower() for x in facility_options[counter]])  # converts strings in list to lowercase
             # expected result : True or False (true - means the facility is found in the review)
             if (common_item(tokens, fac_list)) is True:
@@ -73,6 +74,7 @@ def facility_check(reviewlist):
             break
     return facility_list
 
+"""
 def showwordcloud():
     # OPTIONAL - wordcloud including all emotions mentioned in review
     aspects = (list(set(tokenize(review)).intersection(pos_emotions + neg_emotions)))
@@ -90,4 +92,4 @@ def showwordcloud():
 # print("Hotel Facilities are: ",(list(set(tokens).intersection(facilities))))
 # showing good aspects from review
 # print("\nGood aspects: ",(list(set(tokens).intersection(pos_emotions))))
-"""
+

@@ -20,10 +20,6 @@ window.iconbitmap("icon/hotelopolis.ico")
 senti = SentimentIntensityAnalyzer()
 #image = ImageTk.PhotoImage(Image.open("icon/hotelopolis.png"))
 
-#list of reviews text gui
-ReviewsTextList=[]
-#list of review score /5 gui
-ReviewsScoreList=[]
 #list of hotels on menu (button form)
 HotelMenuList=[]
 #list of hotels taken from csv
@@ -34,6 +30,9 @@ RecommendedHotelsList=[]
 BookmarkedHotelsObjectsList=[]
 #list of bookmarked hotels for dropdown menu
 BookmarkedHotelsNameList=[]
+#list of review items
+ReviewItemsList=[]
+
 
 #for writing bookmarks
 Bookmarkdata=None #if file exists, read from it
@@ -48,12 +47,22 @@ for name in data["name"]: #add all hotels in csv to dropdown
         HotelOptions.append(name)
 
 #options for sorting in dropdown menu
-SortOptions = [
+MainMenuSortOptions = [
     'Alphabetical A-Z',
     'Alphabetical Z-A',
     'Rating (High to Low)',
     'Rating (Low to High)'
     ]
+
+#options for review filtering
+ReviewFilterOptions=[
+    'All',
+    '1 star',
+    '2 stars',
+    '3 stars',
+    '4 stars',
+    '5 stars'
+]
 
 
 if(os.path.exists("Bookmarks.csv")):
@@ -103,25 +112,20 @@ class Hotel:
         self.Facilities = facility_check(','.join(reviewslist)) #get facilities of hotel from finding keywords from reviews
 
 
-
-
 #################functions#####################
 def ClearMainMenu(): #clear all widgets on main menu
     MainMenuFrame.grid_forget()
     FilterFrame.grid_forget()
 
-#
+
 def ClearHotelDetails(): #clear all widgets on hotel details
     RecommendationFrame.grid_forget()
     HotelDetailsFrame.grid_forget()
     MenuButton.grid_forget()
-    for Review in ReviewsTextList:
-        Review.destroy()
-    for Review in ReviewsScoreList:
+    for Review in ReviewItemsList:
         Review.destroy()
 
-    ReviewsTextList.clear()
-    ReviewsScoreList.clear()
+    ReviewItemsList.clear()
 
 def ToggleBookmark(): #toggle bookmarked status of current hotel
     currenthotelname = HotelNameLabel.cget("text")
@@ -181,20 +185,31 @@ def FilterAndSortHotelDetails(sortoption = None): #update main menu based on fil
         for index, hotel in enumerate(SortedList):
             if (len(amenetiesselectedlist) > 0 and not any(x in hotel.Facilities for x in amenetiesselectedlist)): #if hotel does not have selected ameneites, skip it and dont create a button
                 continue
+            MenuHotelFrame = Frame(master=MainMenuFrame, highlightthickness=1, highlightcolor="black")
+            MenuHotelFrame.grid(row=index + 1, column=0, sticky=N, pady=10, padx=10)
             facilitieslist = ', '.join(hotel.Facilities)
-            HotelMenuButton = Button(MainMenuFrame, text=hotel.Name + "\n"+hotel.Address + "\n Average Score: %0.2f" % hotel.AverageScore + "\n Facilities: " + facilitieslist,
-                                     command=lambda hotel=hotel: DisplayHotelDetails(hotel), width=80, height=6, font=("Arial", 10), relief=GROOVE)
-            HotelMenuButton.grid(row=index+1, column=0, sticky=N, pady=10, padx=10)
-            HotelMenuList.append(HotelMenuButton) #add hotel button back into list
+            HotelPicture =  Label(MenuHotelFrame, text="Insert pic", anchor=CENTER)
+            HotelPicture.grid(row=0, column=0, sticky=W, padx=10)
+            HotelButton = Button(MenuHotelFrame, text=hotel.Name + "\n"+hotel.Address + "\n Average Score: %0.1f/5" % hotel.AverageScore + "\n Facilities: " + facilitieslist,
+                                     command=lambda hotel=hotel: DisplayHotelDetails(hotel), width=60, height=6, font=("Arial", 10), relief=GROOVE)
+            HotelButton.grid(row=0, column=1, sticky=W, padx=10)
+            HotelMenuList.append(MenuHotelFrame) #add hotel button back into list
     else:
         for index, hotel in enumerate(SortedList): #else if star filter selected, create buttons based on star filter
             if (len(amenetiesselectedlist) > 0 and not any(x in hotel.Facilities for x in amenetiesselectedlist)): #if hotel does not have selected ameneites, skip it and dont create a button
                 continue
-            facilitieslist = ', '.join(hotel.Facilities)
             if(int(hotel.AverageScore) == onestar.get() or int(hotel.AverageScore) == twostar.get() or int(hotel.AverageScore) == threestar.get() or int(hotel.AverageScore) == fourstar.get() or int(hotel.AverageScore) == fivestar.get()):
-                HotelMenuButton = Button(MainMenuFrame, text=hotel.Name + "\n"+hotel.Address +"\n Average Score: %0.2f" % hotel.AverageScore + "\n Facilities: " + facilitieslist, command=lambda hotel=hotel: DisplayHotelDetails(hotel), width=80, height=6, font=("Arial", 10), relief=GROOVE)
-                HotelMenuButton.grid(row=index + 2, column=0, sticky=N, pady=10, padx=10)
-                HotelMenuList.append(HotelMenuButton)
+                MenuHotelFrame = Frame(master=MainMenuFrame, highlightthickness=1, highlightcolor="black")
+                MenuHotelFrame.grid(row=index + 1, column=0, sticky=N, pady=10, padx=10)
+                facilitieslist = ', '.join(hotel.Facilities)
+                HotelPicture = Label(MenuHotelFrame, text="Insert pic", anchor=CENTER)
+                HotelPicture.grid(row=0, column=0, sticky=W, padx=10)
+                HotelButton = Button(MenuHotelFrame,
+                                     text=hotel.Name + "\n" + hotel.Address + "\n Average Score: %0.1f/5" % hotel.AverageScore + "\n Facilities: " + facilitieslist,
+                                     command=lambda hotel=hotel: DisplayHotelDetails(hotel), width=60, height=6,
+                                     font=("Arial", 10), relief=GROOVE)
+                HotelButton.grid(row=0, column=1, sticky=W, padx=10)
+                HotelMenuList.append(MenuHotelFrame)  # add hotel button back into list
 
 
     #show no results label if completely empty
@@ -218,11 +233,52 @@ def UpdateRecommendations(hotel): #display recommendations at side of hotel deta
 
     RecommendedHotelsList.clear()
     for index, otherhotel in enumerate(HotelsList):
+        facilitieslist = ', '.join(otherhotel.Facilities)
         if (math.ceil(otherhotel.AverageScore) >= round(hotel.AverageScore) and otherhotel.Name != hotel.Name): #check for hotels with similar of higher star ratings to recommend
-            RecoHotelMenuButton = Button(RecommendationFrame, text=otherhotel.Name + "\n Average Score: %0.2f" % otherhotel.AverageScore,
+            RecoHotelFrame = Frame(master=RecommendationFrame, highlightthickness=1, highlightcolor="black")
+            RecoHotelFrame.grid(row=index + 1, column=0, sticky=N, pady=10, padx=10)
+            RecoHotelPicture =  Label(RecoHotelFrame, text="Insert pic", anchor=CENTER)
+            RecoHotelPicture.grid(row=0, column=0, sticky=W, padx=10)
+            RecoHotelMenuButton = Button(RecoHotelFrame, text=otherhotel.Name + "\n Average Score: %0.1f/5" % otherhotel.AverageScore + "\n Facilities: " + facilitieslist,
                                      command=lambda otherhotel=otherhotel: DisplayHotelDetails(otherhotel), width=26, height=6, font=("Arial", 10), relief=GROOVE, wraplength=200)
-            RecoHotelMenuButton.grid(row=index+1, column=0, sticky=N, pady=10, padx= 10)
-            RecommendedHotelsList.append(RecoHotelMenuButton)
+            RecoHotelMenuButton.grid(row=0, column=1, sticky=N, pady=10, padx= 10)
+            RecommendedHotelsList.append(RecoHotelFrame)
+
+def FilterReviews(filterby):
+    for item in ReviewItemsList:
+        item.destroy()
+    ReviewItemsList.clear()
+
+    currenthotel = None
+    currenthotelname = HotelNameLabel.cget("text")
+    for hotel in HotelsList:
+        if (hotel.Name == currenthotelname):
+            currenthotel = hotel
+
+    filteredvar = 0
+    if(filterby == "1 star"):
+        filteredvar = 1
+    elif(filterby == "2 stars"):
+        filteredvar = 2
+    elif (filterby == "3 stars"):
+        filteredvar = 3
+    elif (filterby == "4 stars"):
+        filteredvar = 4
+    elif (filterby == "5 stars"):
+        filteredvar = 5
+
+
+    # display reviews
+    for index, score in enumerate(currenthotel.ScoresList):
+        if(filteredvar!= 0 and filteredvar != int(score)):
+            continue
+        ReviewTextFrame = Frame(master=HotelReviewFrame, highlightcolor="blue", highlightthickness=5)
+        ReviewTextFrame.grid(row=index + 2, column=0, sticky=NSEW, pady=5)
+        ReviewsScoreText = Label(ReviewTextFrame, text=("Score:", score))
+        ReviewsScoreText.grid(row=index, column=0, sticky=NW)
+        ReviewsText = Label(ReviewTextFrame, text=hotel.ReviewsList[index], justify=LEFT, wraplength=800)
+        ReviewsText.grid(row=index + 1, column=0, sticky=NW)
+        ReviewItemsList.append(ReviewTextFrame)
 
 def UpdateScrollbar():
     # scrollbar
@@ -246,53 +302,31 @@ def DisplayHotelDetails(hotel):
 
     #configure hotel name label
     HotelNameLabel.config(text=hotel.Name)
-    HotelNameLabel.grid(row=0, column=0, sticky=NW)
 
     # configure hotel address label
     AddressLabel.config(text=("Address: " + hotel.Address))
-    AddressLabel.grid(row=1, column=0, sticky=NW)
+
+    facilitieslist = ', '.join(hotel.Facilities)
+    FacilitiesLabel.config(text=("Facilities: " + facilitieslist))
 
     # configure bookmarked status of hotel
     BookmarkedVariable.set(hotel.Bookmarked)
 
     # configure hotel average score /5
-    AverageScoreLabel.config(text= "Star Rating: %0.2f"%hotel.AverageScore+ "/5")
-    AverageScoreLabel.grid(row=2, column=0, sticky=NW)
+    AverageScoreLabel.config(text= "Star Rating: %0.1f"%hotel.AverageScore+ "/5")
 
-    #heading for reviews
-    ReviewListHeaderStars = Label(HotelReviewFrame, text="Rating")
-    ReviewListHeaderText = Label(HotelReviewFrame, text="Reviews")
-    ReviewListHeaderStars.grid(row=3,column=0, sticky=NW)
-    ReviewListHeaderText.grid(row=3, column=1, sticky=NW)
-    ReviewsTextList.append(ReviewListHeaderStars)
-    ReviewsTextList.append(ReviewListHeaderText)
+    ReviewFilterVariable.set(ReviewFilterOptions[0])
 
-    #display reviews score/5
+    #display reviews
     for index, score in enumerate(hotel.ScoresList):
-        ReviewsScoreText = Label(HotelReviewFrame, text=score)
-        ReviewsScoreText.grid(row=index +4, column=0, sticky=NW)
-        ReviewsScoreList.append(ReviewsScoreText)
+        ReviewTextFrame = Frame(master=HotelReviewFrame, highlightcolor="blue", highlightthickness=5)
+        ReviewTextFrame.grid(row=index +2, column=0, sticky=NSEW, pady=5)
+        ReviewsScoreText = Label(ReviewTextFrame, text=("Score:",score))
+        ReviewsScoreText.grid(row=index, column=0, sticky=NW)
+        ReviewsText = Label(ReviewTextFrame, text=hotel.ReviewsList[index], justify=LEFT, wraplength=800)
+        ReviewsText.grid(row=index+1, column=0, sticky=NW)
+        ReviewItemsList.append(ReviewTextFrame)
 
-    #display review text
-    for index, review in enumerate(hotel.ReviewsList):
-        ReviewsText = Label(HotelReviewFrame, text=review, justify=LEFT)
-        ReviewsText.grid(row=index + 4, column=1, sticky=NW)
-        ReviewsTextList.append(ReviewsText)
-
-
-    #temporary display for sentimental analysis score for each review
-    SentimentalScoresLabel = Label(HotelReviewFrame, text="Scores(Pos, Neg")
-    SentimentalScoresLabel.grid(row=3, column=2)
-    # sentimental analysis data
-    for index, sentimentalscore in enumerate(hotel.Sentiments["Positive"]):
-        SentimentText = Label(HotelReviewFrame, text=sentimentalscore, justify=LEFT)
-        SentimentText.grid(row=index + 4, column=2, sticky=W)
-        ReviewsTextList.append(SentimentText)
-
-    for index, sentimentalscore in enumerate(hotel.Sentiments["Negative"]):
-        SentimentText = Label(HotelReviewFrame, text=sentimentalscore, justify=LEFT)
-        SentimentText.grid(row=index + 4, column=3, sticky=W)
-        ReviewsTextList.append(SentimentText)
 
     UpdateRecommendations(hotel) #call update recommendations to show hotels with similar or better ratings
     #show widgets needed for hotel details
@@ -382,12 +416,23 @@ MenuButton = Button(ContentFrame, text="Back To Menu", command=DisplayMainMenu,f
 
 #Hotel name label in display hotel options
 HotelNameLabel = Label(HotelNameFrame, font=("Arial", 30))
+HotelNameLabel.grid(row=0, column=0, sticky=NW)
 
 #Address label in display hotel options
 AddressLabel = Label(HotelDescriptionFrame, text="",font=("Arial", 15))
+AddressLabel.grid(row=1, column=0, sticky=NW)
+
+# heading for reviews
+ReviewListHeaderText = Label(HotelReviewFrame, text="Reviews", font=("Arial", 15))
+ReviewListHeaderText.grid(row=0, column=0, sticky=NW)
+
+#Address label in display hotel options
+FacilitiesLabel = Label(HotelDescriptionFrame, text="",font=("Arial", 15))
+FacilitiesLabel.grid(row=2, column=0, sticky=NW)
 
 #average star review label in display hotel options
 AverageScoreLabel = Label(HotelDescriptionFrame, text="",font=("Arial", 15))
+AverageScoreLabel.grid(row=3, column=0, sticky=NW)
 
 #No results label in main menu
 Emptylabel = Label(MainMenuFrame,text="No Results", font=("Arial", 20))
@@ -446,14 +491,14 @@ FiveStarFilter.grid(row=13, column=0, sticky=W)
 
 # set default value of sort
 SortVariable = StringVar()
-SortVariable.set(SortOptions[0])
+SortVariable.set(MainMenuSortOptions[0])
 #add frame for sort widgets
 SortFrame = Frame(master=MainMenuFrame, padx=10, pady=5)
 SortFrame.grid(row=0, column=0, sticky=NW)
 SortLabel = Label(SortFrame, text="Sort by:", font=("Arial", 14))
 SortLabel.grid(row=0, column=0, sticky=NW)
 #create sort dropdown
-SortDropdown = OptionMenu(SortFrame, SortVariable, *SortOptions, command=FilterAndSortHotelDetails)
+SortDropdown = OptionMenu(SortFrame, SortVariable, *MainMenuSortOptions, command=FilterAndSortHotelDetails)
 SortDropdown.grid(row=0, column=1, sticky=NW)
 
 #set default value for bookmark widget
@@ -469,6 +514,18 @@ BookmarkDropdown.grid(row=0, column=0, sticky=W, padx=40)
 BookmarkedVariable = BooleanVar()
 BookmarkedButton = Checkbutton(HotelNameFrame, text="Bookmarked", variable=BookmarkedVariable, onvalue=1, offvalue= 0, command=ToggleBookmark)
 BookmarkedButton.grid(row=0, column=1, sticky=W)
+
+#add frame for sort widgets
+ReviewFilterFrame = Frame(master=HotelReviewFrame, pady=5)
+ReviewFilterFrame.grid(row=1, column=0, sticky=NSEW)
+ReviewFilterLabel = Label(ReviewFilterFrame, text="Filter by:", font=("Arial", 10))
+ReviewFilterLabel.grid(row=0, column=0, sticky=NW)
+#create sort dropdown
+ReviewFilterVariable = StringVar()
+ReviewFilterVariable.set(ReviewFilterOptions[0])
+FilterReviewDropdown = OptionMenu(ReviewFilterFrame, ReviewFilterVariable, *ReviewFilterOptions, command=FilterReviews)
+FilterReviewDropdown.grid(row=0, column=1, sticky=NW)
+
 
 #sort and filter main menu based on default values
 FilterAndSortHotelDetails(SortVariable)

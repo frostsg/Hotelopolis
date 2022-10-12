@@ -335,6 +335,33 @@ def DisplayHotelDetails(hotel):
     MenuButton.grid(row=0, column=0, padx=35, pady=20, sticky=NE)
     UpdateScrollbar()
 
+## Create a add hotel pop up 
+def open_popup():
+    global top
+    top = Toplevel(MainFrame)
+    top.geometry("500x150")
+    top.title("Add hotel")
+    Label(top, text= "Enter the url of the hotel below! (Tripadvisor.com or booking.com)", font=('Arial')).grid(row=0,column=3)
+    global input_text
+    input_text = Entry(top, width=40, textvariable="url")
+    input_text.focus_set()
+    input_text.grid(row=2, column=3)
+    #input_text = Text(top, height=3, width=50)
+    #input_text.grid(row=2, column=3)
+    Ok_button = Button(top, text = "Ok add it!", command= take_input)
+    Ok_button.grid(row=3, column=3)
+    
+
+## Take string input and start webscrapping
+def take_input(*args):
+    url = input_text.get() 
+    print(url)
+    urlchecker(url)
+    top.destroy()
+
+## Click on button
+def on_button():
+    take_input()
 
 #####INITIALISE HOTELS#####
 for i in HotelOptions:
@@ -493,13 +520,15 @@ FiveStarFilter.grid(row=13, column=0, sticky=W)
 SortVariable = StringVar()
 SortVariable.set(MainMenuSortOptions[0])
 #add frame for sort widgets
-SortFrame = Frame(master=MainMenuFrame, padx=10, pady=5)
-SortFrame.grid(row=0, column=0, sticky=NW)
+SortFrame = Frame(master=MainMenuFrame, padx=10, pady=5, highlightthickness=1, highlightcolor="black")
+SortFrame.grid(row=0, column=0, sticky=NSEW)
 SortLabel = Label(SortFrame, text="Sort by:", font=("Arial", 14))
 SortLabel.grid(row=0, column=0, sticky=NW)
 #create sort dropdown
 SortDropdown = OptionMenu(SortFrame, SortVariable, *MainMenuSortOptions, command=FilterAndSortHotelDetails)
 SortDropdown.grid(row=0, column=1, sticky=NW)
+add_hotel = Button(MainMenuFrame, text = "Add Hotel", command= open_popup)
+add_hotel.grid(row=0, column=2, sticky=E)
 
 #set default value for bookmark widget
 BookmarkNameVariable = StringVar()
@@ -509,6 +538,7 @@ if (len(BookmarkedHotelsNameList) == 0): #give default list of bookmarks no book
 # create bookmark dropdown
 BookmarkDropdown = OptionMenu(ContentFrame, BookmarkNameVariable, *BookmarkedHotelsNameList, command=SelectFromBookmark)
 BookmarkDropdown.grid(row=0, column=0, sticky=W, padx=40)
+
 
 #bookmarked checkbutton in display hotel details
 BookmarkedVariable = BooleanVar()

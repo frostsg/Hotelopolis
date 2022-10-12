@@ -6,7 +6,7 @@ from nltk.corpus import stopwords
 from wordcloud import WordCloud
 import matplotlib.pyplot as plt
 import re
-from filtering.py import *
+from filtering import *
 
 # please remove this comment and below "doc" after integration
 doc="""

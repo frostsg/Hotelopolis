@@ -1,16 +1,13 @@
 from tkinter import *
 import math
-import numpy
 import pandas
 import pandas as pd
-import csv
-import nltk
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
 import os.path
 from filtering import *
 from webscraper import *
 from PIL import ImageTk, Image
-from wordcloud_latest import *
+from review_analysis import *
 
 ##########Initialise values############
 window = Tk()
@@ -329,6 +326,32 @@ def FilterReviews(filterby):
         ReviewsText.grid(row=index + 1, column=0, sticky=NW)
         ReviewItemsList.append(ReviewTextFrame)
 
+# Function to create a bar chart for reviews based on their stars rating 
+def createBarChart():
+    # Getting current hotel 
+    currenthotel = None
+    currenthotelname = HotelNameLabel.cget("text")
+    for hotel in HotelsList:
+        if (hotel.Name == currenthotelname):
+            currenthotel = hotel
+            
+    # Categorizing reviews based on their ratings
+    one_count, two_count, three_count, four_count, five_count = 0,0,0,0,0
+    for score in currenthotel.ScoresList:
+        if int(score) == 5:
+            five_count += 1
+        elif int(score) == 4:
+            four_count += 1
+        elif int(score) == 3:
+            three_count += 1
+        elif int(score) == 2:
+            two_count += 1
+        else:
+            one_count += 1
+            
+    # Displaying bar chart function from analysis
+    showBarChart(one_count, two_count, three_count, four_count, five_count)
+
 def UpdateScrollbar():
     # scrollbar
     # update size of content for scrollbar
@@ -600,8 +623,13 @@ BookmarkedVariable = BooleanVar()
 BookmarkedButton = Checkbutton(HotelNameFrame, text="Bookmarked", variable=BookmarkedVariable, onvalue=1, offvalue= 0, command=ToggleBookmark)
 BookmarkedButton.grid(row=0, column=1, sticky=W)
 
+#Show analysis 
 ShowAnalysisButton = Button(HotelNameFrame, text = "Show analysis", command=DisplayWorldCloud)
 ShowAnalysisButton.grid(row=0, column=2)
+
+#Show Bar Chart
+ShowBarChartButton = Button(HotelNameFrame, text = "Show Bar Chart", command=createBarChart)
+ShowBarChartButton.grid(row=0, column=3)
 
 #add frame for sort widgets
 ReviewFilterFrame = Frame(master=HotelReviewFrame, pady=5)

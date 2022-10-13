@@ -74,18 +74,6 @@ def facility_check(reviewlist):
             break
     return facility_list
 
-"""
-def showwordcloud():
-    # OPTIONAL - wordcloud including all emotions mentioned in review
-    aspects = (list(set(tokenize(review)).intersection(pos_emotions + neg_emotions)))
-    frequency_dist = nltk.FreqDist(aspects)
-    wordcloud = WordCloud().generate_from_frequencies(frequency_dist)
-    plt.imshow(wordcloud)
-    plt.axis("off")
-    # uncomment below for word cloud to appear
-    plt.show()
-
-"""
 
 
 # display common words from 2 sets/lists - tokens (review) and facilties

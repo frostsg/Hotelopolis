@@ -1,6 +1,7 @@
 from tkinter import *
 import math
 import numpy
+import pandas
 import pandas as pd
 import csv
 import nltk
@@ -9,10 +10,11 @@ import os.path
 from filtering import *
 from webscraper import *
 from PIL import ImageTk, Image
+from wordcloud_latest import *
 
 ##########Initialise values############
 window = Tk()
-data = pd.read_csv("Filtered_Datafiniti_Hotel_Main_Review.csv")
+HotelCSVData = pd.read_csv("Filtered_Datafiniti_Hotel_Main_Review.csv")
 window.geometry("900x600")
 window.option_add("*Background", "#fff6ec")
 window.title("Hotelopolis")
@@ -36,14 +38,13 @@ ReviewItemsList=[]
 
 #for writing bookmarks
 Bookmarkdata=None #if file exists, read from it
-BookmarkDataFrame=None #if file does not exist, create data frame for it
 
-#dropdown box options
+#original hotel options
 HotelOptions=[]
-for name in data["name"]: #add all hotels in csv to dropdown
+for name in HotelCSVData["name"]: #add all hotels in csv
     if(pd.isnull(name)): #get rid of any null cells
        continue
-    if(name not in HotelOptions):
+    if(name not in HotelOptions):#as the name is repeated multiple times in csv, just take one
         HotelOptions.append(name)
 
 #options for sorting in dropdown menu
@@ -64,19 +65,21 @@ ReviewFilterOptions=[
     '5 stars'
 ]
 
-
-if(os.path.exists("Bookmarks.csv")):
-    Bookmarkdata = pd.read_csv("Bookmarks.csv")
-    if(len(HotelOptions) != len(Bookmarkdata)): #if csv changed, reset to all not bookmarked
-        BookmarkDataFrame = pd.DataFrame(HotelOptions, columns=['name'])
+def UpdateCsv():
+    if(os.path.exists("Bookmarks.csv")):
+        Bookmarkdata = pd.read_csv("Bookmarks.csv", index_col=0)
+        listofbookmarks = list(Bookmarkdata['name'])
+        NewHotels = [hotel for hotel in HotelOptions if hotel not in listofbookmarks]#check for new hotel and add if neccessary
+        if(len(NewHotels) > 0):
+            BookmarkDataFrame = pd.DataFrame(NewHotels, columns=['name'])
+            BookmarkDataFrame["bookmarked"] = False
+            Bookmarkdata = pandas.concat([Bookmarkdata, BookmarkDataFrame],axis=0, ignore_index=True)
+            Bookmarkdata.to_csv("Bookmarks.csv")
+    else:
+        BookmarkDataFrame = pd.DataFrame(HotelOptions, columns=['name'])  #since bookmarked csv not created, create one and set all hotels to not bookmarked
         BookmarkDataFrame["bookmarked"] = False
         BookmarkDataFrame.to_csv("Bookmarks.csv")
         Bookmarkdata = pd.read_csv("Bookmarks.csv")
-else:
-    BookmarkDataFrame = pd.DataFrame(HotelOptions, columns=['name'])  #since bookmarked csv not created, create one and set all hotels to not bookmarked
-    BookmarkDataFrame["bookmarked"] = False
-    BookmarkDataFrame.to_csv("Bookmarks.csv")
-    Bookmarkdata = pd.read_csv("Bookmarks.csv")
 
 
 class Hotel:
@@ -91,7 +94,6 @@ class Hotel:
         analysis ={}
         analysis["Positive"] = [senti.polarity_scores(i)["pos"] for i in self.ReviewsList]
         analysis["Negative"] = [senti.polarity_scores(i)["neg"] for i in self.ReviewsList]
-        self.Sentiments = analysis
 
         TotalScore = 0.00
         if(' ' in self.ScoresList): #detect for hotels without given score and use sentimental analysis score to get review score
@@ -101,8 +103,14 @@ class Hotel:
                 totalratingadded = PositiveList[index] + NegativeList[index]
                 if(totalratingadded !=0):
                     calculated = round((PositiveList[index]/totalratingadded) * 5) #calculated score by adding positive and negative then divide by total, times 5(out of 5 stars)
+                    if(calculated == 0): #to make completely negative reviews have a score of 1
+                        calculated=1
                     self.ScoresList[index] = calculated
-                    TotalScore+=calculated
+                    TotalScore += calculated
+                else:#if review is completely neutral, give it a score of 3
+                    calculated = 3
+                    self.ScoresList[index] = calculated
+                    TotalScore += calculated
         else:
             for rating in self.ScoresList:
                 TotalScore += int(rating)
@@ -111,12 +119,18 @@ class Hotel:
 
         self.Facilities = facility_check(','.join(reviewslist)) #get facilities of hotel from finding keywords from reviews
 
+        GoodReviewsList=[]
+        for index, score in enumerate(self.ScoresList):
+            if(int(score) >=4):
+                GoodReviewsList.append(self.ReviewsList[index])
+
+        self.WordCloudReview = ','.join(GoodReviewsList)
+
 
 #################functions#####################
 def ClearMainMenu(): #clear all widgets on main menu
     MainMenuFrame.grid_forget()
     FilterFrame.grid_forget()
-
 
 def ClearHotelDetails(): #clear all widgets on hotel details
     RecommendationFrame.grid_forget()
@@ -126,6 +140,25 @@ def ClearHotelDetails(): #clear all widgets on hotel details
         Review.destroy()
 
     ReviewItemsList.clear()
+
+def RefreshHotels():
+    HotelCSVData = pd.read_csv("Filtered_Datafiniti_Hotel_Main_Review.csv")
+
+    for name in HotelCSVData["name"]:
+        if name not in HotelOptions:
+            ReviewsList = list(HotelCSVData.loc[HotelCSVData.name == name, 'reviews.text'])
+            ReviewsRating = list(HotelCSVData.loc[HotelCSVData.name == name, 'reviews.rating'])
+            AddressList = HotelCSVData.loc[HotelCSVData.name == name, 'address']
+            Address = AddressList.iat[0]
+            Bookmarked = False
+            HotelObject = Hotel(name, Address, ReviewsRating, ReviewsList, Bookmarked)
+            HotelsList.append(HotelObject)
+            HotelOptions.append(name)
+
+    UpdateCsv()
+    # sort and filter main menu based on default values
+    FilterAndSortHotelDetails(SortVariable)
+
 
 def ToggleBookmark(): #toggle bookmarked status of current hotel
     currenthotelname = HotelNameLabel.cget("text")
@@ -143,8 +176,9 @@ def ToggleBookmark(): #toggle bookmarked status of current hotel
                 if(len(BookmarkedHotelsNameList)==0):
                     BookmarkedHotelsNameList.append("No Bookmarks")
 
+            Bookmarkdata = pd.read_csv("Bookmarks.csv")
             Bookmarkdata.loc[Bookmarkdata.name == hotel.Name, "bookmarked"] = hotel.Bookmarked
-            Bookmarkdata.to_csv("Bookmarks.csv", index= False) #update csv based on new bookmarks
+            Bookmarkdata.to_csv("Bookmarks.csv", index=False) #update csv based on new bookmarks
 
     BookmarkDropdown["menu"].delete(0, 'end')
     for hotel in BookmarkedHotelsNameList:
@@ -192,7 +226,7 @@ def FilterAndSortHotelDetails(sortoption = None): #update main menu based on fil
             HotelPicture.grid(row=0, column=0, sticky=W, padx=10)
             HotelButton = Button(MenuHotelFrame, text=hotel.Name + "\n"+hotel.Address + "\n Average Score: %0.1f/5" % hotel.AverageScore + "\n Facilities: " + facilitieslist,
                                      command=lambda hotel=hotel: DisplayHotelDetails(hotel), width=60, height=6, font=("Arial", 10), relief=GROOVE)
-            HotelButton.grid(row=0, column=1, sticky=W, padx=10)
+            HotelButton.grid(row=0, column=1, sticky=W)
             HotelMenuList.append(MenuHotelFrame) #add hotel button back into list
     else:
         for index, hotel in enumerate(SortedList): #else if star filter selected, create buttons based on star filter
@@ -208,7 +242,7 @@ def FilterAndSortHotelDetails(sortoption = None): #update main menu based on fil
                                      text=hotel.Name + "\n" + hotel.Address + "\n Average Score: %0.1f/5" % hotel.AverageScore + "\n Facilities: " + facilitieslist,
                                      command=lambda hotel=hotel: DisplayHotelDetails(hotel), width=60, height=6,
                                      font=("Arial", 10), relief=GROOVE)
-                HotelButton.grid(row=0, column=1, sticky=W, padx=10)
+                HotelButton.grid(row=0, column=1, sticky=W)
                 HotelMenuList.append(MenuHotelFrame)  # add hotel button back into list
 
 
@@ -227,6 +261,15 @@ def SelectFromBookmark(selectedbookmark): #called when u select a hotel from the
             break
     BookmarkNameVariable.set("Bookmarks") #reset bookmark dropdown title
 
+def DisplayWorldCloud():
+    currenthotel = None
+    currenthotelname = HotelNameLabel.cget("text")
+    for hotel in HotelsList:
+        if (hotel.Name == currenthotelname):
+            currenthotel = hotel
+
+    showWordCloud(currenthotel.WordCloudReview)
+
 def UpdateRecommendations(hotel): #display recommendations at side of hotel details
     for HotelButton in RecommendedHotelsList: #destroy all buttons recommended before to refresh with new ones
         HotelButton.destroy()
@@ -241,7 +284,7 @@ def UpdateRecommendations(hotel): #display recommendations at side of hotel deta
             RecoHotelPicture.grid(row=0, column=0, sticky=W, padx=10)
             RecoHotelMenuButton = Button(RecoHotelFrame, text=otherhotel.Name + "\n Average Score: %0.1f/5" % otherhotel.AverageScore + "\n Facilities: " + facilitieslist,
                                      command=lambda otherhotel=otherhotel: DisplayHotelDetails(otherhotel), width=26, height=6, font=("Arial", 10), relief=GROOVE, wraplength=200)
-            RecoHotelMenuButton.grid(row=0, column=1, sticky=N, pady=10, padx= 10)
+            RecoHotelMenuButton.grid(row=0, column=1, sticky=N)
             RecommendedHotelsList.append(RecoHotelFrame)
 
 def FilterReviews(filterby):
@@ -267,7 +310,6 @@ def FilterReviews(filterby):
     elif (filterby == "5 stars"):
         filteredvar = 5
 
-
     # display reviews
     for index, score in enumerate(currenthotel.ScoresList):
         if(filteredvar!= 0 and filteredvar != int(score)):
@@ -276,7 +318,7 @@ def FilterReviews(filterby):
         ReviewTextFrame.grid(row=index + 2, column=0, sticky=NSEW, pady=5)
         ReviewsScoreText = Label(ReviewTextFrame, text=("Score:", score))
         ReviewsScoreText.grid(row=index, column=0, sticky=NW)
-        ReviewsText = Label(ReviewTextFrame, text=hotel.ReviewsList[index], justify=LEFT, wraplength=800)
+        ReviewsText = Label(ReviewTextFrame, text=currenthotel.ReviewsList[index], justify=LEFT, wraplength=800)
         ReviewsText.grid(row=index + 1, column=0, sticky=NW)
         ReviewItemsList.append(ReviewTextFrame)
 
@@ -358,17 +400,20 @@ def take_input(*args):
     print(url)
     urlchecker(url)
     top.destroy()
+    RefreshHotels()
 
 ## Click on button
 def on_button():
     take_input()
 
-#####INITIALISE HOTELS#####
+#####Main code#####
+UpdateCsv()
+Bookmarkdata = pd.read_csv("Bookmarks.csv", index_col=0)
 for i in HotelOptions:
     #create hotels
-    ReviewsList = list(data.loc[data.name == i, 'reviews.text'])
-    ReviewsRating = list(data.loc[data.name == i, 'reviews.rating'])
-    AddressList =  data.loc[data.name == i, 'address']
+    ReviewsList = list(HotelCSVData.loc[HotelCSVData.name == i, 'reviews.text'])
+    ReviewsRating = list(HotelCSVData.loc[HotelCSVData.name == i, 'reviews.rating'])
+    AddressList =  HotelCSVData.loc[HotelCSVData.name == i, 'address']
     Address = AddressList.iat[0]
     Bookmarked = Bookmarkdata.loc[Bookmarkdata.name == i, 'bookmarked'].bool()
     HotelObject = Hotel(i, Address, ReviewsRating, ReviewsList, Bookmarked)
@@ -376,6 +421,9 @@ for i in HotelOptions:
     if(Bookmarked == True):
         BookmarkedHotelsObjectsList.append(HotelObject)
         BookmarkedHotelsNameList.append(HotelObject.Name)
+
+
+
 
 ##########UI LAYOUT##########
 #frame for entire window
@@ -521,14 +569,14 @@ SortVariable = StringVar()
 SortVariable.set(MainMenuSortOptions[0])
 #add frame for sort widgets
 SortFrame = Frame(master=MainMenuFrame, padx=10, pady=5, highlightthickness=1, highlightcolor="black")
-SortFrame.grid(row=0, column=0, sticky=NSEW)
+SortFrame.grid(row=0, column=0, sticky=NW)
 SortLabel = Label(SortFrame, text="Sort by:", font=("Arial", 14))
 SortLabel.grid(row=0, column=0, sticky=NW)
 #create sort dropdown
 SortDropdown = OptionMenu(SortFrame, SortVariable, *MainMenuSortOptions, command=FilterAndSortHotelDetails)
 SortDropdown.grid(row=0, column=1, sticky=NW)
 add_hotel = Button(MainMenuFrame, text = "Add Hotel", command= open_popup)
-add_hotel.grid(row=0, column=2, sticky=E)
+add_hotel.grid(row=0, column=0, sticky=E, padx=10)
 
 #set default value for bookmark widget
 BookmarkNameVariable = StringVar()
@@ -544,6 +592,9 @@ BookmarkDropdown.grid(row=0, column=0, sticky=W, padx=40)
 BookmarkedVariable = BooleanVar()
 BookmarkedButton = Checkbutton(HotelNameFrame, text="Bookmarked", variable=BookmarkedVariable, onvalue=1, offvalue= 0, command=ToggleBookmark)
 BookmarkedButton.grid(row=0, column=1, sticky=W)
+
+ShowAnalysisButton = Button(HotelNameFrame, text = "Show analysis", command=DisplayWorldCloud)
+ShowAnalysisButton.grid(row=0, column=2)
 
 #add frame for sort widgets
 ReviewFilterFrame = Frame(master=HotelReviewFrame, pady=5)

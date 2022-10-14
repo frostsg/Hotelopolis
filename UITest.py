@@ -327,7 +327,7 @@ def FilterReviews(filterby):
         ReviewItemsList.append(ReviewTextFrame)
 
 # Function to create a bar chart for reviews based on their stars rating 
-def createBarChart():
+def DisplayBarChart():
     # Getting current hotel 
     currenthotel = None
     currenthotelname = HotelNameLabel.cget("text")
@@ -351,6 +351,10 @@ def createBarChart():
             
     # Displaying bar chart function from analysis
     showBarChart(one_count, two_count, three_count, four_count, five_count)
+
+def showAnalysis():
+    DisplayWorldCloud()
+    DisplayBarChart()
 
 def UpdateScrollbar():
     # scrollbar
@@ -624,12 +628,12 @@ BookmarkedButton = Checkbutton(HotelNameFrame, text="Bookmarked", variable=Bookm
 BookmarkedButton.grid(row=0, column=1, sticky=W)
 
 #Show analysis 
-ShowAnalysisButton = Button(HotelNameFrame, text = "Show analysis", command=DisplayWorldCloud)
+ShowAnalysisButton = Button(HotelNameFrame, text = "Show analysis", command=showAnalysis)
 ShowAnalysisButton.grid(row=0, column=2)
 
 #Show Bar Chart
-ShowBarChartButton = Button(HotelNameFrame, text = "Show Bar Chart", command=createBarChart)
-ShowBarChartButton.grid(row=0, column=3)
+#ShowBarChartButton = Button(HotelNameFrame, text = "Show Bar Chart", command=DisplayBarChart)
+#ShowBarChartButton.grid(row=0, column=3)
 
 #add frame for sort widgets
 ReviewFilterFrame = Frame(master=HotelReviewFrame, pady=5)

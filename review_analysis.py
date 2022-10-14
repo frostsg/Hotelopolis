@@ -18,9 +18,13 @@ def showWordCloud(review):
   aspects=(list(set(keys).intersection(aspect_list))) 
   frequency_dist = nltk.FreqDist(aspects)
   wordcloud = WordCloud().generate_from_frequencies(frequency_dist)
+  plt.figure("Positive aspects")
   plt.imshow(wordcloud)
+  plt.title("What's good about this hotel?")
   plt.axis("off")
-  plt.show()  
+  plt.show()
+  #plt.imshow()
+
 
 # Function to create a bar chart with hotel star ratings
 def showBarChart(one_star, two_star, three_star, four_star, five_star):

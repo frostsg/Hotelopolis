@@ -17,7 +17,7 @@ facility_options = {1: restaurant_list, 2: pool_list, 3: jacuzzi_list,  4: gym_l
 neg_emotions = ['noisy','unaffordable', 'disgusting', 'poor', 'expensive', 'dirty', 'uncomfortable', 'rude','hassle', 'horrible', 'noisy']
 pos_emotions = ['great','relaxing','perfect','high quality','wonderful','affordable','clean', 'comfort', 'comfortable', 'beautiful', 'luxury', 'happy', 'joy', 'lovely','friendly', 'helpful', 'pleasant', 'awesome']
 other_facilities=['staff','location','wifi','beds','rooms','bathroom', 'kitchen']
-aspect_list=restaurant_list+pool_list+jacuzzi_list+gym_list+spa_list+neg_emotions+pos_emotions+other_facilities
+aspect_list=restaurant_list+pool_list+jacuzzi_list+gym_list+spa_list+pos_emotions+other_facilities
 
 # check if 2 lists have common item or not
 def common_item(x, y):

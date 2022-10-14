@@ -1,3 +1,7 @@
+"""
+This program filter amenities in a hotel by identify keywords related to amenities in the reviews - ragnar170
+"""
+
 import nltk
 from nltk.tokenize import word_tokenize
 from nltk.corpus import stopwords

@@ -352,9 +352,26 @@ def DisplayBarChart():
     # Displaying bar chart function from analysis
     showBarChart(one_count, two_count, three_count, four_count, five_count)
 
+# Function to create and display a pie chart
+def DisplayPieChart():
+    currenthotel = None
+    currenthotelname = HotelNameLabel.cget("text")
+    for hotel in HotelsList:
+        if (hotel.Name == currenthotelname):
+            currenthotel = hotel
+    
+    analysis ={}
+    analysis["Positive"] = [senti.polarity_scores(i)["pos"] for i in currenthotel.ReviewsList]
+    analysis["Negative"] = [senti.polarity_scores(i)["neg"] for i in currenthotel.ReviewsList]
+    positive = sum(analysis["Positive"])
+    negative = sum(analysis["Negative"])
+    showPieChart(positive, negative)
+
+# Function for Show Analysis Button to display WordCloud, Bar Chart and Pie Chart
 def showAnalysis():
     DisplayWorldCloud()
     DisplayBarChart()
+    DisplayPieChart()
 
 def UpdateScrollbar():
     # scrollbar
@@ -630,10 +647,6 @@ BookmarkedButton.grid(row=0, column=1, sticky=W)
 #Show analysis 
 ShowAnalysisButton = Button(HotelNameFrame, text = "Show analysis", command=showAnalysis)
 ShowAnalysisButton.grid(row=0, column=2)
-
-#Show Bar Chart
-#ShowBarChartButton = Button(HotelNameFrame, text = "Show Bar Chart", command=DisplayBarChart)
-#ShowBarChartButton.grid(row=0, column=3)
 
 #add frame for sort widgets
 ReviewFilterFrame = Frame(master=HotelReviewFrame, pady=5)

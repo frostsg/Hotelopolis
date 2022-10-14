@@ -35,10 +35,26 @@ def showBarChart(one_star, two_star, three_star, four_star, five_star):
   plt.ylabel("No. of Reviews")
   plt.title("Reviews rating")
   g.show()
-  
-def showPieChart(pos,neg,neu):
-  plt.show()
 
+# Function to create a pie chart with positive and negative reviews
+def showPieChart(pos,neg):
+  total = pos + neg 
+  pos_pe = str(calculatePercentage(pos, total)) + "%"
+  neg_pe = str(calculatePercentage(neg, total)) + "%"
+  data = [pos, neg]
+  color = ['blue','red','grey']
+  label = ['Positive Reviews ' + pos_pe, 'Negative Reviews ' + neg_pe]
+  y = plt.figure("Percentage of Reviews")
+  plt.pie(data, labels=label, colors=color)
+  plt.title("Percentage of Reviews")
+  y.show()
+
+# Function to calculate percentage
+def calculatePercentage(target,total):
+  result = (target/total) * 100
+  return int(result)
+
+#showPieChart(10,2)
 #showBarChart(2,3,4,5,6)
 #showWordCloud(doc)
 

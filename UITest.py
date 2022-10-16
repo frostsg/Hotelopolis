@@ -19,6 +19,8 @@ window.iconbitmap("icon/hotelopolis.ico")
 senti = SentimentIntensityAnalyzer()
 #image = ImageTk.PhotoImage(Image.open("icon/hotelopolis.png"))
 
+Framecolor = "#DAA06D" #color for all frames
+
 #list of hotels on menu (button form)
 HotelMenuList=[]
 #list of hotels taken from csv
@@ -62,28 +64,35 @@ ReviewFilterOptions=[
     '5 stars'
 ]
 
-def UpdateBookmarkCsv():
-    if(os.path.exists("Bookmarks.csv")):
-        Bookmarkdata = pd.read_csv("Bookmarks.csv", index_col=0)
-        listofbookmarks = list(Bookmarkdata['name'])
-        if(len(HotelOptions) > len(listofbookmarks)):
-            NewHotels = [hotel for hotel in HotelOptions if hotel not in listofbookmarks]#check for new hotel and add if neccessary
-            BookmarkDataFrame = pd.DataFrame(NewHotels, columns=['name'])
-            BookmarkDataFrame["bookmarked"] = False
-            Bookmarkdata = pandas.concat([Bookmarkdata, BookmarkDataFrame],axis=0, ignore_index=True)
-            Bookmarkdata.to_csv("Bookmarks.csv")
-
-        elif(len(HotelOptions) < len(listofbookmarks)):
-            OldHotels = [hotel for hotel in listofbookmarks if hotel not in HotelOptions]  # check for new hotel and add if neccessary
-            for hotel in OldHotels:
-                Bookmarkdata.drop(Bookmarkdata[Bookmarkdata['name'] == hotel].index, inplace=True)
+def UpdateBookmarkCsv(toggledhotel = None):
+    if(toggledhotel == None):
+        if(os.path.exists("Bookmarks.csv")):
+            Bookmarkdata = pd.read_csv("Bookmarks.csv", index_col=0)
+            listofbookmarks = list(Bookmarkdata['name'])
+            if(len(HotelOptions) > len(listofbookmarks)):
+                NewHotels = [hotel for hotel in HotelOptions if hotel not in listofbookmarks]#check for new hotel and add if neccessary
+                BookmarkDataFrame = pd.DataFrame(NewHotels, columns=['name'])
+                BookmarkDataFrame["bookmarked"] = False
+                Bookmarkdata = pandas.concat([Bookmarkdata, BookmarkDataFrame],axis=0, ignore_index=True)
                 Bookmarkdata.to_csv("Bookmarks.csv")
 
+            elif(len(HotelOptions) < len(listofbookmarks)):
+                OldHotels = [hotel for hotel in listofbookmarks if hotel not in HotelOptions]  # check for new hotel and add if neccessary
+                for hotel in OldHotels:
+                    Bookmarkdata.drop(Bookmarkdata[Bookmarkdata['name'] == hotel].index, inplace=True)
+                    Bookmarkdata.to_csv("Bookmarks.csv")
+        else:
+            BookmarkDataFrame = pd.DataFrame(HotelOptions, columns=['name'])  #since bookmarked csv not created, create one and set all hotels to not bookmarked
+            BookmarkDataFrame["bookmarked"] = False
+            BookmarkDataFrame.to_csv("Bookmarks.csv")
+
     else:
-        BookmarkDataFrame = pd.DataFrame(HotelOptions, columns=['name'])  #since bookmarked csv not created, create one and set all hotels to not bookmarked
-        BookmarkDataFrame["bookmarked"] = False
-        BookmarkDataFrame.to_csv("Bookmarks.csv")
         Bookmarkdata = pd.read_csv("Bookmarks.csv")
+        Bookmarkdata.loc[Bookmarkdata.name == toggledhotel.Name, "bookmarked"] = toggledhotel.Bookmarked
+        Bookmarkdata.to_csv("Bookmarks.csv", index=False)  # update csv based on new bookmarks
+
+    Bookmarkdata = pd.read_csv("Bookmarks.csv", index_col=0)
+    return Bookmarkdata
 
 
 class Hotel:
@@ -180,9 +189,7 @@ def ToggleBookmark(): #toggle bookmarked status of current hotel
                 if(len(BookmarkedHotelsNameList)==0):
                     BookmarkedHotelsNameList.append("No Bookmarks")
 
-            Bookmarkdata = pd.read_csv("Bookmarks.csv")
-            Bookmarkdata.loc[Bookmarkdata.name == hotel.Name, "bookmarked"] = hotel.Bookmarked
-            Bookmarkdata.to_csv("Bookmarks.csv", index=False) #update csv based on new bookmarks
+            UpdateBookmarkCsv(hotel)
 
     BookmarkDropdown["menu"].delete(0, 'end')
     for hotel in BookmarkedHotelsNameList:
@@ -223,7 +230,7 @@ def FilterAndSortHotelDetails(sortoption = None): #update main menu based on fil
         for index, hotel in enumerate(SortedList):
             if (len(amenetiesselectedlist) > 0 and not any(x in hotel.Facilities for x in amenetiesselectedlist)): #if hotel does not have selected ameneites, skip it and dont create a button
                 continue
-            MenuHotelFrame = Frame(master=MainMenuFrame, highlightthickness=2, highlightbackground="#954535")
+            MenuHotelFrame = Frame(master=MainMenuFrame, highlightthickness=2, highlightbackground=Framecolor)
             MenuHotelFrame.grid(row=index + 1, column=0, sticky=N, pady=10, padx=10)
             facilitieslist = ', '.join(hotel.Facilities)
             HotelPicture =  Label(MenuHotelFrame, text="Insert pic", anchor=CENTER)
@@ -237,7 +244,7 @@ def FilterAndSortHotelDetails(sortoption = None): #update main menu based on fil
             if (len(amenetiesselectedlist) > 0 and not any(x in hotel.Facilities for x in amenetiesselectedlist)): #if hotel does not have selected ameneites, skip it and dont create a button
                 continue
             if(int(hotel.AverageScore) == onestar.get() or int(hotel.AverageScore) == twostar.get() or int(hotel.AverageScore) == threestar.get() or int(hotel.AverageScore) == fourstar.get() or int(hotel.AverageScore) == fivestar.get()):
-                MenuHotelFrame = Frame(master=MainMenuFrame, highlightthickness=2, highlightbackground="#954535")
+                MenuHotelFrame = Frame(master=MainMenuFrame, highlightthickness=2, highlightbackground=Framecolor)
                 MenuHotelFrame.grid(row=index + 1, column=0, sticky=N, pady=10, padx=10)
                 facilitieslist = ', '.join(hotel.Facilities)
                 HotelPicture = Label(MenuHotelFrame, text="Insert pic", anchor=CENTER)
@@ -282,7 +289,7 @@ def UpdateRecommendations(hotel): #display recommendations at side of hotel deta
     for index, otherhotel in enumerate(HotelsList):
         facilitieslist = ', '.join(otherhotel.Facilities)
         if (math.ceil(otherhotel.AverageScore) >= round(hotel.AverageScore) and otherhotel.Name != hotel.Name): #check for hotels with similar of higher star ratings to recommend
-            RecoHotelFrame = Frame(master=RecommendationFrame, highlightthickness=2, highlightbackground="#954535")
+            RecoHotelFrame = Frame(master=RecommendationFrame, highlightthickness=2, highlightbackground=Framecolor)
             RecoHotelFrame.grid(row=index + 1, column=0, sticky=N, pady=10, padx=10)
             RecoHotelPicture =  Label(RecoHotelFrame, text="Insert pic", anchor=CENTER)
             RecoHotelPicture.grid(row=0, column=0, sticky=W, padx=10)
@@ -318,7 +325,7 @@ def FilterReviews(filterby):
     for index, score in enumerate(currenthotel.ScoresList):
         if(filteredvar!= 0 and filteredvar != int(score)):
             continue
-        ReviewTextFrame = Frame(master=HotelReviewFrame, highlightbackground="#954535", highlightthickness=1)
+        ReviewTextFrame = Frame(master=HotelReviewFrame, highlightbackground=Framecolor, highlightthickness=1)
         ReviewTextFrame.grid(row=index + 2, column=0, sticky=NSEW, pady=5)
         ReviewsScoreText = Label(ReviewTextFrame, text=("Score:", score))
         ReviewsScoreText.grid(row=index, column=0, sticky=NW)
@@ -408,11 +415,17 @@ def DisplayHotelDetails(hotel):
     # configure hotel average score /5
     AverageScoreLabel.config(text= "Star Rating: %0.1f"%hotel.AverageScore+ "/5")
 
+    #configure images
+    HotelMainImage.config(text="Main Image")
+    HotelSmallImageOne.config(text="Small Image")
+    HotelSmallImageTwo.config(text="Small Image")
+    HotelSmallImageThree.config(text="Small Image")
+
     ReviewFilterVariable.set(ReviewFilterOptions[0])
 
     #display reviews
     for index, score in enumerate(hotel.ScoresList):
-        ReviewTextFrame = Frame(master=HotelReviewFrame, highlightbackground="#954535", highlightthickness=1)
+        ReviewTextFrame = Frame(master=HotelReviewFrame, highlightbackground=Framecolor, highlightthickness=1)
         ReviewTextFrame.grid(row=index +2, column=0, sticky=NSEW, pady=5)
         ReviewsScoreText = Label(ReviewTextFrame, text=("Score:",score))
         ReviewsScoreText.grid(row=index, column=0, sticky=NW)
@@ -458,8 +471,8 @@ def on_button():
     take_input()
 
 #####Main code#####
-UpdateBookmarkCsv()
-Bookmarkdata = pd.read_csv("Bookmarks.csv", index_col=0)
+Bookmarkdata = UpdateBookmarkCsv()
+#Bookmarkdata = pd.read_csv("Bookmarks.csv", index_col=0)
 for i in HotelOptions:
     #create hotels
     ReviewsList = list(HotelCSVData.loc[HotelCSVData.name == i, 'reviews.text'])
@@ -510,16 +523,16 @@ MainCanvas.bind('<Configure>', lambda e: MainCanvas.configure(scrollregion = Mai
 MainCanvas.bind_all("<MouseWheel>", _on_mouse_wheel)
 
 #Filter Frame
-FilterFrame = Frame(master=ContentFrame, highlightbackground="black", highlightthickness=1, padx=10, pady=5)
+FilterFrame = Frame(master=ContentFrame, highlightbackground=Framecolor, highlightthickness=1, padx=10, pady=5)
 
 #Recommendation frame for recommended hotels
-RecommendationFrame = Frame(master=ContentFrame, highlightbackground="black", highlightthickness=1,padx=10, pady=5)
+RecommendationFrame = Frame(master=ContentFrame, highlightbackground=Framecolor, highlightthickness=1,padx=10, pady=5)
 
 #Frame for hotel buttons, hotel info
 MainMenuFrame = Frame(master=ContentFrame)
 
 #Frame for hotel details
-HotelDetailsFrame = Frame(master=ContentFrame, highlightbackground="black", highlightthickness=1,padx=10, pady=5)
+HotelDetailsFrame = Frame(master=ContentFrame, highlightbackground=Framecolor, highlightthickness=1,padx=10, pady=5)
 
 #Frame for display of hotel name, and bookmark and address
 HotelDescriptionFrame = Frame(master=HotelDetailsFrame)
@@ -530,8 +543,36 @@ HotelNameFrame = Frame(master=HotelDescriptionFrame)
 HotelNameFrame.grid(row=0, column=0, sticky=NW)
 
 #Frame for reviews
+HotelPicturesFrame =  Frame(master=HotelDetailsFrame, highlightbackground=Framecolor, highlightthickness=1, padx=10, pady=5)
+HotelPicturesFrame.grid(row=1, column=0, sticky=NSEW)
+
+#Frame for main picture
+HotelMainPictureFrame =  Frame(master=HotelPicturesFrame, padx=10)
+HotelMainPictureFrame.grid(row=0, column=0, sticky=NW)
+
+#Frame for small pictures
+HotelSmallPicturesFrame =  Frame(master=HotelPicturesFrame)
+HotelSmallPicturesFrame.grid(row=0, column=1, sticky=NW)
+
+#Hotel Main Image Label
+HotelMainImage = Label(HotelMainPictureFrame, text="Main pic", width=30, height=20, highlightbackground=Framecolor, highlightthickness=1, padx=10, pady=10)
+HotelMainImage.grid(row=0, column=0)
+
+#Hotel Main Image Label
+HotelSmallImageOne = Label(HotelSmallPicturesFrame, text="small pic", width=10, height=10, highlightbackground=Framecolor, highlightthickness=1, padx=10, pady=10)
+HotelSmallImageOne.grid(row=0, column=0)
+
+#Hotel Main Image Label
+HotelSmallImageTwo = Label(HotelSmallPicturesFrame, text="small pic", width=10, height=10, highlightbackground=Framecolor, highlightthickness=1, padx=10, pady=10)
+HotelSmallImageTwo.grid(row=1, column=0)
+
+#Hotel Main Image Label
+HotelSmallImageThree = Label(HotelSmallPicturesFrame, text="small pic", width=10, height=10, highlightbackground=Framecolor, highlightthickness=1, padx=10, pady=10)
+HotelSmallImageThree.grid(row=1, column=1)
+
+#Frame for reviews
 HotelReviewFrame =  Frame(master=HotelDetailsFrame)
-HotelReviewFrame.grid(row=1, column=0, sticky=NW)
+HotelReviewFrame.grid(row=2, column=0, sticky=NW)
 
 #Recommendation Label
 RecommendationLabel = Label(RecommendationFrame, text="You may also like:")

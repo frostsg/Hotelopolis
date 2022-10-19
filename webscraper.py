@@ -5,6 +5,7 @@ Done by frostsg
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.common.exceptions import ElementClickInterceptedException
+from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.support import expected_conditions as EC
 import pandas as pd
 import time
@@ -50,6 +51,8 @@ def NEW_tripadvisor_ExtractReview(url):
         try:
             webdriver.find_element(By.XPATH, "//a[@class='ui_button nav next primary ']").click()
         except ElementClickInterceptedException:
+            break
+        except NoSuchElementException:
             break
     # Updating the CSV file 
     df.to_csv("Filtered_Datafiniti_Hotel_Main_Review.csv", index=False)

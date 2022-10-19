@@ -531,7 +531,7 @@ def DisplayHotelDetails(hotel):
 def open_popup():
     global top
     top = Toplevel(MainFrame)
-    top.geometry("500x150")
+    top.geometry("400x150")
     top.title("Add hotel")
     Label(top, text= "Enter the url of the hotel below! (Tripadvisor.com or booking.com)", font=(Textfont,10)).grid(row=0,column=3)
     global input_text
@@ -549,6 +549,7 @@ def take_input(*args):
     url = input_text.get() 
     print(url)
     urlchecker(url)
+    input_text.delete(0, 'end')
     top.destroy()
     RefreshHotels()
 

@@ -25,8 +25,6 @@ from selenium import webdriver
 
 from Scripts.webscraper import urlchecker
 
-#end
-
 ##########Initialise variables############
 window = Tk()
 HotelCSVData = pd.read_csv("Filtered_Datafiniti_Hotel_Main_Review.csv")
@@ -53,11 +51,11 @@ BookmarkedHotelsNameList=[]
 #list of review items
 ReviewItemsList=[]
 
-#for writing bookmarks
-Bookmarkdata=None #if file exists, read from it
-
 #global variable for counting image index
 counter = 1
+
+#for writing bookmarks
+Bookmarkdata=None #if file exists, read from it
 
 #original hotel options
 HotelOptions=[]
@@ -85,37 +83,7 @@ ReviewFilterOptions=[
     '5 stars'
 ]
 
-def UpdateBookmarkCsv(toggledhotel = None):
-    if(toggledhotel == None):#update bookmark csv at the start
-        if(os.path.exists("Bookmarks.csv")):#if csv already exists, check its contents
-            Bookmarkdata = pd.read_csv("Bookmarks.csv", index_col=0)
-            listofbookmarks = list(Bookmarkdata['name'])
-            if(len(HotelOptions) > len(listofbookmarks)): #if there are more hotels in the main csv than the bookmark csv
-                NewHotels = [hotel for hotel in HotelOptions if hotel not in listofbookmarks]#check for new hotel and add
-                BookmarkDataFrame = pd.DataFrame(NewHotels, columns=['name'])
-                BookmarkDataFrame["bookmarked"] = False
-                Bookmarkdata = pandas.concat([Bookmarkdata, BookmarkDataFrame],axis=0, ignore_index=True)
-                Bookmarkdata.to_csv("Bookmarks.csv")
-
-            elif(len(HotelOptions) < len(listofbookmarks)):#if there are less hotels in main csv than bookmark csv
-                OldHotels = [hotel for hotel in listofbookmarks if hotel not in HotelOptions]  # check for new old and add delete
-                for hotel in OldHotels:
-                    Bookmarkdata.drop(Bookmarkdata[Bookmarkdata['name'] == hotel].index, inplace=True)
-                    Bookmarkdata.to_csv("Bookmarks.csv")
-        else:
-            BookmarkDataFrame = pd.DataFrame(HotelOptions, columns=['name'])  #since bookmarked csv not created, create one and set all hotels to not bookmarked
-            BookmarkDataFrame["bookmarked"] = False
-            BookmarkDataFrame.to_csv("Bookmarks.csv")
-
-    else:#update bookmark csv when user clicks on checkbutton
-        Bookmarkdata = pd.read_csv("Bookmarks.csv")
-        Bookmarkdata.loc[Bookmarkdata.name == toggledhotel.Name, "bookmarked"] = toggledhotel.Bookmarked
-        Bookmarkdata.to_csv("Bookmarks.csv", index=False)  # update csv based on new bookmarks
-
-    Bookmarkdata = pd.read_csv("Bookmarks.csv", index_col=0)
-    return Bookmarkdata
-
-
+#########CLASSES##########
 class Hotel:
     def __init__(self, name, address, scoreslist, reviewslist, bookmarked): #initialise hotel objects
         self.Name = name
@@ -175,6 +143,36 @@ class Hotel:
 
 
 #################functions#####################
+def UpdateBookmarkCsv(toggledhotel = None):
+    if(toggledhotel == None):#update bookmark csv at the start
+        if(os.path.exists("Bookmarks.csv")):#if csv already exists, check its contents
+            Bookmarkdata = pd.read_csv("Bookmarks.csv", index_col=0)
+            listofbookmarks = list(Bookmarkdata['name'])
+            if(len(HotelOptions) > len(listofbookmarks)): #if there are more hotels in the main csv than the bookmark csv
+                NewHotels = [hotel for hotel in HotelOptions if hotel not in listofbookmarks]#check for new hotel and add
+                BookmarkDataFrame = pd.DataFrame(NewHotels, columns=['name'])
+                BookmarkDataFrame["bookmarked"] = False
+                Bookmarkdata = pandas.concat([Bookmarkdata, BookmarkDataFrame],axis=0, ignore_index=True)
+                Bookmarkdata.to_csv("Bookmarks.csv")
+
+            elif(len(HotelOptions) < len(listofbookmarks)):#if there are less hotels in main csv than bookmark csv
+                OldHotels = [hotel for hotel in listofbookmarks if hotel not in HotelOptions]  # check for new old and add delete
+                for hotel in OldHotels:
+                    Bookmarkdata.drop(Bookmarkdata[Bookmarkdata['name'] == hotel].index, inplace=True)
+                    Bookmarkdata.to_csv("Bookmarks.csv")
+        else:
+            BookmarkDataFrame = pd.DataFrame(HotelOptions, columns=['name'])  #since bookmarked csv not created, create one and set all hotels to not bookmarked
+            BookmarkDataFrame["bookmarked"] = False
+            BookmarkDataFrame.to_csv("Bookmarks.csv")
+
+    else:#update bookmark csv when user clicks on checkbutton
+        Bookmarkdata = pd.read_csv("Bookmarks.csv")
+        Bookmarkdata.loc[Bookmarkdata.name == toggledhotel.Name, "bookmarked"] = toggledhotel.Bookmarked
+        Bookmarkdata.to_csv("Bookmarks.csv", index=False)  # update csv based on new bookmarks
+
+    Bookmarkdata = pd.read_csv("Bookmarks.csv", index_col=0)
+    return Bookmarkdata
+
 def InitialiseHotels():
     # web scrape images for each hotel
     for name in HotelOptions:
@@ -187,7 +185,7 @@ def InitialiseHotels():
         else:
             pass
 
-    #Update bookmark csv and assign bookmarkdata variable to updated csv
+    # Update bookmark csv and assign bookmarkdata variable to updated csv
     Bookmarkdata = UpdateBookmarkCsv()
     for i in HotelOptions:
         # create hotels
@@ -658,6 +656,7 @@ def scrapeImages(name): #function to scrape images from web
 def download_image(url, name, num): #function to download image
     while True:
         #write image to file
+        global counter
         trackCount = num
         #folder_name = name + " Images"
         folder_name = r"C:" + "Images/" + name + ' Images'
@@ -680,6 +679,10 @@ def download_image(url, name, num): #function to download image
         else:
             break
 #end
+
+##########MAIN CODE##########
+#initialise hotels from csv
+InitialiseHotels()
 
 ##########UI LAYOUT##########
 #frame for entire window
@@ -902,11 +905,6 @@ FilterReviewDropdown.config(font=(Textfont, 10), bg=ButtonColor)
 FilterReviewDropdown["menu"].config(font=(Textfont, 10), bg=ButtonColor)
 FilterReviewDropdown.grid(row=0, column=1, sticky=NW)
 
-
-
-##########MAIN CODE##########
-#initialise hotels from csv
-InitialiseHotels()
 #sort and filter main menu based on default values
 FilterAndSortHotelDetails(SortVariable)
 #show main menu widgets

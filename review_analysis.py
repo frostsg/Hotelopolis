@@ -23,7 +23,7 @@ def pos_showWordCloud(review, hotelname):
   plt.imshow(wordcloud)
   plt.title("Positive Aspects")
   plt.axis("off")
-  f.show()
+  plt.show()
 
 def neg_showWordCloud(review, hotelname):
   # use tokenize function to use nlp to convert review to list

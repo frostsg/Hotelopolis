@@ -27,7 +27,7 @@ from Scripts.webscraper import urlchecker
 
 #end
 
-##########Initialise values############
+##########Initialise variables############
 window = Tk()
 HotelCSVData = pd.read_csv("Filtered_Datafiniti_Hotel_Main_Review.csv")
 window.geometry("1920x1080")
@@ -35,7 +35,6 @@ window.option_add("*Background", "#fff6ec")
 window.title("Hotelopolis")
 window.iconbitmap("icon/hotelopolis.ico")
 senti = SentimentIntensityAnalyzer()
-#image = ImageTk.PhotoImage(Image.open("icon/hotelopolis.png"))
 
 Framecolor = "#DAA06D" #color for all frames
 Textfont = "Times New Roman"
@@ -54,9 +53,11 @@ BookmarkedHotelsNameList=[]
 #list of review items
 ReviewItemsList=[]
 
-
 #for writing bookmarks
 Bookmarkdata=None #if file exists, read from it
+
+#global variable for counting image index
+counter = 1
 
 #original hotel options
 HotelOptions=[]
@@ -85,19 +86,19 @@ ReviewFilterOptions=[
 ]
 
 def UpdateBookmarkCsv(toggledhotel = None):
-    if(toggledhotel == None):
-        if(os.path.exists("Bookmarks.csv")):
+    if(toggledhotel == None):#update bookmark csv at the start
+        if(os.path.exists("Bookmarks.csv")):#if csv already exists, check its contents
             Bookmarkdata = pd.read_csv("Bookmarks.csv", index_col=0)
             listofbookmarks = list(Bookmarkdata['name'])
-            if(len(HotelOptions) > len(listofbookmarks)):
-                NewHotels = [hotel for hotel in HotelOptions if hotel not in listofbookmarks]#check for new hotel and add if neccessary
+            if(len(HotelOptions) > len(listofbookmarks)): #if there are more hotels in the main csv than the bookmark csv
+                NewHotels = [hotel for hotel in HotelOptions if hotel not in listofbookmarks]#check for new hotel and add
                 BookmarkDataFrame = pd.DataFrame(NewHotels, columns=['name'])
                 BookmarkDataFrame["bookmarked"] = False
                 Bookmarkdata = pandas.concat([Bookmarkdata, BookmarkDataFrame],axis=0, ignore_index=True)
                 Bookmarkdata.to_csv("Bookmarks.csv")
 
-            elif(len(HotelOptions) < len(listofbookmarks)):
-                OldHotels = [hotel for hotel in listofbookmarks if hotel not in HotelOptions]  # check for new hotel and add if neccessary
+            elif(len(HotelOptions) < len(listofbookmarks)):#if there are less hotels in main csv than bookmark csv
+                OldHotels = [hotel for hotel in listofbookmarks if hotel not in HotelOptions]  # check for new old and add delete
                 for hotel in OldHotels:
                     Bookmarkdata.drop(Bookmarkdata[Bookmarkdata['name'] == hotel].index, inplace=True)
                     Bookmarkdata.to_csv("Bookmarks.csv")
@@ -106,7 +107,7 @@ def UpdateBookmarkCsv(toggledhotel = None):
             BookmarkDataFrame["bookmarked"] = False
             BookmarkDataFrame.to_csv("Bookmarks.csv")
 
-    else:
+    else:#update bookmark csv when user clicks on checkbutton
         Bookmarkdata = pd.read_csv("Bookmarks.csv")
         Bookmarkdata.loc[Bookmarkdata.name == toggledhotel.Name, "bookmarked"] = toggledhotel.Bookmarked
         Bookmarkdata.to_csv("Bookmarks.csv", index=False)  # update csv based on new bookmarks
@@ -156,12 +157,12 @@ class Hotel:
         BadReviewsList=[]
         for index, score in enumerate(self.ScoresList):
             if(int(score) >=4):
-                GoodReviewsList.append(self.ReviewsList[index])
+                GoodReviewsList.append(self.ReviewsList[index]) #get the list of good reviews
             if(int(score) <= 3):
-                BadReviewsList.append(self.ReviewsList[index])
+                BadReviewsList.append(self.ReviewsList[index]) #get the list of bad reviews
 
-        self.pos_WordCloudReview = ','.join(GoodReviewsList)
-        self.neg_WordCloudReview = ','.join(BadReviewsList)
+        self.pos_WordCloudReview = ','.join(GoodReviewsList) #combine all the good reviews for the word cloud analysis
+        self.neg_WordCloudReview = ','.join(BadReviewsList)#combine all the bad reviews for the word cloud analysis
 
         self.PhotosList = []
         Photos = []
@@ -170,10 +171,37 @@ class Hotel:
         for file in files:
             Photos.append(file)
         for i in range(0,6):
-            self.PhotosList.append(p.Image.open(Photos[i]))
+            self.PhotosList.append(p.Image.open(Photos[i])) #assign photos to eaach hotel
 
 
 #################functions#####################
+def InitialiseHotels():
+    # web scrape images for each hotel
+    for name in HotelOptions:
+        # create directory to save image
+        folder_name = r"C:" + "Images/" + name + ' Images'
+        if not os.path.isdir(folder_name):
+            scrapeImages(name)
+        elif name == HotelOptions[-1]:
+            os.system("taskkill /im chrome.exe /f")
+        else:
+            pass
+
+    #Update bookmark csv and assign bookmarkdata variable to updated csv
+    Bookmarkdata = UpdateBookmarkCsv()
+    for i in HotelOptions:
+        # create hotels
+        ReviewsList = list(HotelCSVData.loc[HotelCSVData.name == i, 'reviews.text'])
+        ReviewsRating = list(HotelCSVData.loc[HotelCSVData.name == i, 'reviews.rating'])
+        AddressList = HotelCSVData.loc[HotelCSVData.name == i, 'address']
+        Address = AddressList.iat[0]
+        Bookmarked = Bookmarkdata.loc[Bookmarkdata.name == i, 'bookmarked'].bool()
+        HotelObject = Hotel(i, Address, ReviewsRating, ReviewsList, Bookmarked)
+        HotelsList.append(HotelObject)
+        if (Bookmarked == True):
+            BookmarkedHotelsObjectsList.append(HotelObject)
+            BookmarkedHotelsNameList.append(HotelObject.Name)
+
 def ClearMainMenu(): #clear all widgets on main menu
     MainMenuFrame.grid_forget()
     FilterFrame.grid_forget()
@@ -270,9 +298,8 @@ def FilterAndSortHotelDetails(sortoption = None): #update main menu based on fil
             resizedPic = hotel.PhotosList[0].resize((240, 98), Image.Resampling.LANCZOS)
             displayPic = ptk.PhotoImage(resizedPic)
             label = Label(image=displayPic)
-            label.image = displayPic  # keep a reference!
+            label.image = displayPic  # keep a reference or image will be deleted
             HotelPicture = Label(MenuHotelFrame, image=displayPic, anchor=CENTER)
-            # end
             HotelPicture.grid(row=0, column=0, sticky=W)
             HotelButton = Button(MenuHotelFrame, text=hotel.Name + "\n"+hotel.Address + "\n Star Rating: %0.1f/5" % hotel.AverageScore + "\n Facilities: " + facilitieslist,
                                      command=lambda hotel=hotel: DisplayHotelDetails(hotel), width=60, height=6, font=(Textfont, 10), relief=GROOVE, bg=ButtonColor)
@@ -289,7 +316,7 @@ def FilterAndSortHotelDetails(sortoption = None): #update main menu based on fil
                 resizedPic = hotel.PhotosList[0].resize((240, 98), Image.Resampling.LANCZOS)
                 displayPic = ptk.PhotoImage(resizedPic)
                 label = Label(image=displayPic)
-                label.image = displayPic  # keep a reference!
+                label.image = displayPic   # keep a reference or image will be deleted
                 HotelPicture = Label(MenuHotelFrame, image=displayPic, anchor=CENTER)
                 # end
                 HotelPicture.grid(row=0, column=0, sticky=W)
@@ -340,7 +367,7 @@ def UpdateRecommendations(hotel): #display recommendations at side of hotel deta
             resizedPic = otherhotel.PhotosList[0].resize((240, 98), Image.Resampling.LANCZOS)
             displayPic = ptk.PhotoImage(resizedPic)
             label = Label(image=displayPic)
-            label.image = displayPic  # keep a reference!
+            label.image = displayPic   # keep a reference or image will be deleted
             RecoHotelPicture = Label(RecoHotelFrame, image=displayPic, anchor=CENTER)
             # end
             RecoHotelPicture.grid(row=0, column=0, sticky=W)
@@ -360,6 +387,7 @@ def FilterReviews(filterby):
         if (hotel.Name == currenthotelname):
             currenthotel = hotel
 
+    #assign filter variable
     filteredvar = 0
     if(filterby == "1 star"):
         filteredvar = 1
@@ -372,7 +400,7 @@ def FilterReviews(filterby):
     elif (filterby == "5 stars"):
         filteredvar = 5
 
-    # display reviews
+    # display reviews based on filters
     for index, score in enumerate(currenthotel.ScoresList):
         if(filteredvar!= 0 and filteredvar != int(score)):
             continue
@@ -508,8 +536,8 @@ def DisplayHotelDetails(hotel):
     HotelSmallImageTwo.config(image=secondPic)
     HotelSmallImageThree.config(image=thirdPic)
     HotelSmallImageFour.config(image=fourthPic)
-    #end
 
+    #reset review filter to all
     ReviewFilterVariable.set(ReviewFilterOptions[0])
 
     #display reviews
@@ -545,25 +573,12 @@ def open_popup():
     input_text = Entry(top, width=40, textvariable="url")
     input_text.focus_set()
     input_text.grid(row=2, column=3)
-    #input_text = Text(top, height=3, width=50)
-    #input_text.grid(row=2, column=3)
     Ok_button = Button(top, text = "Ok add it!", command= on_button,font=(Textfont,10), bg=ButtonColor)
     Ok_button.grid(row=3, column=3)
-    
-def addHotel_loadingscreen():
-    global load
-    load = Toplevel(MainFrame)
-    img = ImageTk.PhotoImage(Image.open("GdTTaIrf_400x400.png"))
-    panel = Label(load, image = img)
-    panel.pack(side="bottom", fill="both", expand="yes")
-    load.geometry("400x400+520+150")
-    #load.reizable(width=True, height=True)
-    time.sleep(60)
 
 ## Take string input and start webscrapping
 def take_input(*args):
-    url = input_text.get() 
-    print(url)
+    url = input_text.get()
     urlchecker(url)
     input_text.delete(0, 'end')
     top.destroy()
@@ -571,9 +586,11 @@ def take_input(*args):
 
 ## Click on button
 def on_button():
-    #addHotel_loadingscreen()
     take_input()
 
+# Function for scrolling using mouse wheel
+def _on_mouse_wheel(event):
+    MainCanvas.yview_scroll(-1 * int((event.delta / 120)), "units")
 
 #JF
 def scrapeImages(name): #function to scrape images from web
@@ -637,14 +654,10 @@ def scrapeImages(name): #function to scrape images from web
         except:
             print("Couldn't download an image %s, continuing downloading the next one" % (i))
 
-#global variable
-counter = 1
-
 
 def download_image(url, name, num): #function to download image
     while True:
         #write image to file
-        global counter
         trackCount = num
         #folder_name = name + " Images"
         folder_name = r"C:" + "Images/" + name + ' Images'
@@ -677,7 +690,6 @@ MainFrame.pack(side=LEFT, fill=BOTH, expand=1)
 MainCanvas = Canvas(master=MainFrame)
 VScrollbar = Scrollbar(master=MainFrame, orient=VERTICAL, command=MainCanvas.yview)
 HScrollbar = Scrollbar(master=MainFrame, orient=HORIZONTAL, command=MainCanvas.xview)
-#scrollbar
 VScrollbar.pack(side=RIGHT, fill=Y)
 HScrollbar.pack(side=BOTTOM, fill=X)
 
@@ -690,11 +702,6 @@ MainCanvas.pack(side=LEFT, fill=BOTH, expand=1)
 #App Title
 AppTitleLabel = Label(ContentFrame, text="HOTELOPOLIS", font=(Textfont, 40), anchor=CENTER)
 AppTitleLabel.grid(row=0, column=1)
-
-#Filter frame for filtering hotels
-# Function for scrolling using mouse wheel
-def _on_mouse_wheel(event):
-    MainCanvas.yview_scroll(-1 * int((event.delta / 120)), "units")
 
 #Mouse Wheel scrolling implementation
 MainCanvas.configure(yscrollcommand=VScrollbar.set)
@@ -733,7 +740,6 @@ HotelMainPictureFrame.grid(row=0, column=0, sticky=NW)
 HotelSmallPicturesFrame = Frame(master=HotelPicturesFrame)
 HotelSmallPicturesFrame.grid(row=0, column=1, sticky=NW)
 
-#JF start
 #Hotel Main Image Label
 HotelMainImage = Label(HotelMainPictureFrame, text="Main pic", highlightbackground=Framecolor, highlightthickness=1, padx=10, pady=10)
 HotelMainImage.grid(row=0, column=0)
@@ -753,7 +759,6 @@ HotelSmallImageThree.grid(row=1, column=1)
 #Hotel Small Image Label 4
 HotelSmallImageFour = Label(HotelSmallPicturesFrame, text="small pic", highlightbackground=Framecolor, highlightthickness=1, padx=10, pady=10)
 HotelSmallImageFour.grid(row=0, column=1)
-#end
 
 #Frame for reviews
 HotelReviewFrame = Frame(master=HotelDetailsFrame)
@@ -765,34 +770,6 @@ RecommendationLabel.grid(row=0, column=0)
 
 #Back to menu Button
 MenuButton = Button(ContentFrame, text="Back To Menu", command=DisplayMainMenu,font=(Textfont, 10), relief=GROOVE, bg=ButtonColor)
-
-#JFStart
-for name in HotelOptions:
-    # create directory to save image
-    folder_name = r"C:" + "Images/" + name + ' Images'
-    if not os.path.isdir(folder_name):
-        scrapeImages(name)
-    elif name == HotelOptions[-1]:
-        os.system("taskkill /im chrome.exe /f")
-    else:
-        pass
-#end
-
-#####Main code#####
-Bookmarkdata = UpdateBookmarkCsv()
-#Bookmarkdata = pd.read_csv("Bookmarks.csv", index_col=0)
-for i in HotelOptions:
-    #create hotels
-    ReviewsList = list(HotelCSVData.loc[HotelCSVData.name == i, 'reviews.text'])
-    ReviewsRating = list(HotelCSVData.loc[HotelCSVData.name == i, 'reviews.rating'])
-    AddressList = HotelCSVData.loc[HotelCSVData.name == i, 'address']
-    Address = AddressList.iat[0]
-    Bookmarked = Bookmarkdata.loc[Bookmarkdata.name == i, 'bookmarked'].bool()
-    HotelObject = Hotel(i, Address, ReviewsRating, ReviewsList, Bookmarked)
-    HotelsList.append(HotelObject)
-    if(Bookmarked == True):
-        BookmarkedHotelsObjectsList.append(HotelObject)
-        BookmarkedHotelsNameList.append(HotelObject.Name)
 
 #Hotel name label in display hotel options
 HotelNameLabel = Label(HotelNameFrame, font=(Textfont, 30))
@@ -926,6 +903,10 @@ FilterReviewDropdown["menu"].config(font=(Textfont, 10), bg=ButtonColor)
 FilterReviewDropdown.grid(row=0, column=1, sticky=NW)
 
 
+
+##########MAIN CODE##########
+#initialise hotels from csv
+InitialiseHotels()
 #sort and filter main menu based on default values
 FilterAndSortHotelDetails(SortVariable)
 #show main menu widgets

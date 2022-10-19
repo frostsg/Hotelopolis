@@ -12,7 +12,7 @@ from review_analysis import *
 ##########Initialise values############
 window = Tk()
 HotelCSVData = pd.read_csv("Filtered_Datafiniti_Hotel_Main_Review.csv")
-window.geometry("1920x1080")
+window.geometry("900x600")
 window.option_add("*Background", "#fff6ec")
 window.title("Hotelopolis")
 window.iconbitmap("icon/hotelopolis.ico")
@@ -133,15 +133,11 @@ class Hotel:
         self.Facilities = facility_check(','.join(reviewslist)) #get facilities of hotel from finding keywords from reviews
 
         GoodReviewsList=[]
-        BadReviewsList = []
         for index, score in enumerate(self.ScoresList):
             if(int(score) >=4):
                 GoodReviewsList.append(self.ReviewsList[index])
-            if (int(score) <= 3):
-                BadReviewsList.append(self.ReviewsList[index])
 
-        self.pos_WordCloudReview = ','.join(GoodReviewsList)
-        self.neg_WordCloudReview = ','.join(BadReviewsList)
+        self.WordCloudReview = ','.join(GoodReviewsList)
 
 
 #################functions#####################
@@ -283,10 +279,7 @@ def DisplayWorldCloud():
         if (hotel.Name == currenthotelname):
             currenthotel = hotel
 
-    neg_showWordCloud(currenthotel.neg_WordCloudReview, currenthotelname)
-    pos_showWordCloud(currenthotel.pos_WordCloudReview, currenthotelname)
-    
-    
+    showWordCloud(currenthotel.WordCloudReview)
 
 def UpdateRecommendations(hotel): #display recommendations at side of hotel details
     for HotelButton in RecommendedHotelsList: #destroy all buttons recommended before to refresh with new ones
@@ -364,7 +357,7 @@ def DisplayBarChart():
             one_count += 1
             
     # Displaying bar chart function from analysis
-    showBarChart(one_count, two_count, three_count, four_count, five_count, currenthotelname)
+    showBarChart(one_count, two_count, three_count, four_count, five_count)
 
 # Function to create and display a pie chart
 def DisplayPieChart():
@@ -379,15 +372,13 @@ def DisplayPieChart():
     analysis["Negative"] = [senti.polarity_scores(i)["neg"] for i in currenthotel.ReviewsList]
     positive = sum(analysis["Positive"])
     negative = sum(analysis["Negative"])
-    showPieChart(positive, negative, currenthotelname)
+    showPieChart(positive, negative)
 
 # Function for Show Analysis Button to display WordCloud, Bar Chart and Pie Chart
 def showAnalysis():
+    DisplayWorldCloud()
     DisplayBarChart()
     DisplayPieChart()
-
-def showEmotions():
-    DisplayWorldCloud()
 
 def UpdateScrollbar():
     # scrollbar
@@ -697,10 +688,6 @@ BookmarkedButton.grid(row=0, column=1, sticky=W)
 #Show analysis 
 ShowAnalysisButton = Button(HotelNameFrame, text = "Show analysis", command=showAnalysis)
 ShowAnalysisButton.grid(row=0, column=2)
-
-#Show keywords
-ShowEmotionButton = Button(HotelNameFrame, text = "Show keywords", command=showEmotions)
-ShowEmotionButton.grid(row=0, column=3)
 
 #add frame for sort widgets
 ReviewFilterFrame = Frame(master=HotelReviewFrame, pady=5)

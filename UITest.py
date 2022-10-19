@@ -133,11 +133,15 @@ class Hotel:
         self.Facilities = facility_check(','.join(reviewslist)) #get facilities of hotel from finding keywords from reviews
 
         GoodReviewsList=[]
+        BadReviewsList = []
         for index, score in enumerate(self.ScoresList):
             if(int(score) >=4):
                 GoodReviewsList.append(self.ReviewsList[index])
+            if (int(score) <= 4):
+                BadReviewsList.append(self.ReviewsList[index])
 
-        self.WordCloudReview = ','.join(GoodReviewsList)
+        self.pos_WordCloudReview = ','.join(GoodReviewsList)
+        self.neg_WordCloudReview = ','.join(BadReviewsList)
 
 
 #################functions#####################
@@ -279,7 +283,8 @@ def DisplayWorldCloud():
         if (hotel.Name == currenthotelname):
             currenthotel = hotel
 
-    showWordCloud(currenthotel.WordCloudReview)
+    pos_showWordCloud(currenthotel.pos_WordCloudReview)
+    neg_showWordCloud(currenthotel.neg_WordCloudReview)
 
 def UpdateRecommendations(hotel): #display recommendations at side of hotel details
     for HotelButton in RecommendedHotelsList: #destroy all buttons recommended before to refresh with new ones

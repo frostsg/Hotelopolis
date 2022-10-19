@@ -9,21 +9,36 @@ import matplotlib.pyplot as plt
 import re
 from filtering import *
 
-def showWordCloud(review):
+def pos_showWordCloud(review):
   # use tokenize function to use nlp to convert review to list
   keys = tokenize(review)
   keys = [re.sub('[^a-zA-Z]+', '', _) for _ in keys]  # remove numbers or special chaar
 
   # OPTIONAL - wordcloud including all emotion mentioned in review
   # find common elements from review and all reference lists
-  aspects=(list(set(keys).intersection(aspect_list))) 
+  aspects=(list(set(keys).intersection(pos_aspect_list)))
   frequency_dist = nltk.FreqDist(aspects)
   wordcloud = WordCloud().generate_from_frequencies(frequency_dist)
   f = plt.figure("Positive Aspects of this hotel")
   plt.imshow(wordcloud)
   plt.title("What's good about this hotel?")
   plt.axis("off")
-  f.show()  
+  f.show()
+
+def neg_showWordCloud(review):
+  # use tokenize function to use nlp to convert review to list
+  keys = tokenize(review)
+  keys = [re.sub('[^a-zA-Z]+', '', _) for _ in keys]  # remove numbers or special chaar
+  # OPTIONAL - wordcloud including all emotion mentioned in review
+  # find common elements from review and all reference lists
+  aspects=(list(set(keys).intersection(neg_aspect_list)))
+  frequency_dist = nltk.FreqDist(aspects)
+  wordcloud = WordCloud().generate_from_frequencies(frequency_dist)
+  f = plt.figure("Negative Aspects of this hotel")
+  plt.imshow(wordcloud)
+  plt.title("Where to improve?")
+  plt.axis("off")
+  f.show()
 
 # Function to create a bar chart with hotel star ratings
 def showBarChart(one_star, two_star, three_star, four_star, five_star):

@@ -197,10 +197,10 @@ def RefreshHotels():
             AddressList = HotelCSVData.loc[HotelCSVData.name == name, 'address']
             Address = AddressList.iat[0]
             Bookmarked = False
+            scrapeImages(name)
             HotelObject = Hotel(name, Address, ReviewsRating, ReviewsList, Bookmarked)
             HotelsList.append(HotelObject)
             HotelOptions.append(name)
-            scrapeImages(name)
 
     UpdateBookmarkCsv()
     # sort and filter main menu based on default values
@@ -323,8 +323,8 @@ def DisplayWorldCloud():
         if (hotel.Name == currenthotelname):
             currenthotel = hotel
 
-    neg_showWordCloud(currenthotel.neg_WordCloudReview, currenthotelname)
     pos_showWordCloud(currenthotel.pos_WordCloudReview, currenthotelname)
+    neg_showWordCloud(currenthotel.neg_WordCloudReview, currenthotelname)
 
 def UpdateRecommendations(hotel): #display recommendations at side of hotel details
     for HotelButton in RecommendedHotelsList: #destroy all buttons recommended before to refresh with new ones
@@ -538,7 +538,7 @@ def DisplayHotelDetails(hotel):
 def open_popup():
     global top
     top = Toplevel(MainFrame)
-    top.geometry("500x150")
+    top.geometry("400x150")
     top.title("Add hotel")
     Label(top, text= "Enter the url of the hotel below! (Tripadvisor.com or booking.com)", font=(Textfont,10)).grid(row=0,column=3)
     global input_text

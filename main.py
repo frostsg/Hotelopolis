@@ -29,7 +29,7 @@ from webscraper import urlchecker
 ##########Initialise values############
 window = Tk()
 HotelCSVData = pd.read_csv("Filtered_Datafiniti_Hotel_Main_Review.csv")
-window.geometry("900x600")
+window.geometry("1920x1080")
 window.option_add("*Background", "#fff6ec")
 window.title("Hotelopolis")
 window.iconbitmap("icon/hotelopolis.ico")
@@ -152,12 +152,15 @@ class Hotel:
         self.Facilities = facility_check(','.join(reviewslist)) #get facilities of hotel from finding keywords from reviews
 
         GoodReviewsList=[]
+        BadReviewsList=[]
         for index, score in enumerate(self.ScoresList):
             if(int(score) >=4):
                 GoodReviewsList.append(self.ReviewsList[index])
+            if(int(score) <= 3):
+                BadReviewsList.append(self.ReviewsList[index])
 
-        self.WordCloudReview = ','.join(GoodReviewsList)
-
+        self.pos_WordCloudReview = ','.join(GoodReviewsList)
+        self.neg_WordCloudReview = ','.join(BadReviewsList)
 
 #################functions#####################
 def ClearMainMenu(): #clear all widgets on main menu
@@ -255,7 +258,7 @@ def FilterAndSortHotelDetails(sortoption = None): #update main menu based on fil
             facilitieslist = ', '.join(hotel.Facilities)
             # JF amended
             processPic = p.Image.open(r"C:"+ "Images/" + hotel.Name + " Images/" + hotel.Name + "1" + ".jpg")
-            resizedPic = processPic.resize((240, 98), Image.ANTIALIAS)
+            resizedPic = processPic.resize((240, 98), Image.Resampling.LANCZOS)
             displayPic = ptk.PhotoImage(resizedPic)
             label = Label(image=displayPic)
             label.image = displayPic  # keep a reference!
@@ -276,7 +279,7 @@ def FilterAndSortHotelDetails(sortoption = None): #update main menu based on fil
                 facilitieslist = ', '.join(hotel.Facilities)
                 # JF amended
                 processPic = p.Image.open(r"C:" "Images/" + hotel.Name + " Images/" + hotel.Name + "1" + ".jpg")
-                resizedPic = processPic.resize((240, 98), Image.ANTIALIAS)
+                resizedPic = processPic.resize((240, 98), Image.Resampling.LANCZOS)
                 displayPic = ptk.PhotoImage(resizedPic)
                 label = Label(image=displayPic)
                 label.image = displayPic  # keep a reference!
@@ -313,7 +316,8 @@ def DisplayWorldCloud():
         if (hotel.Name == currenthotelname):
             currenthotel = hotel
 
-    showWordCloud(currenthotel.WordCloudReview)
+    neg_showWordCloud(currenthotel.neg_WordCloudReview, currenthotelname)
+    pos_showWordCloud(currenthotel.pos_WordCloudReview, currenthotelname)
 
 def UpdateRecommendations(hotel): #display recommendations at side of hotel details
     for HotelButton in RecommendedHotelsList: #destroy all buttons recommended before to refresh with new ones
@@ -327,7 +331,7 @@ def UpdateRecommendations(hotel): #display recommendations at side of hotel deta
             RecoHotelFrame.grid(row=index + 1, column=0, sticky=N, pady=10)
             # JF amended
             processPic = p.Image.open(r"C:"+ "Images/" + otherhotel.Name + " Images/" + otherhotel.Name + "1" + ".jpg")
-            resizedPic = processPic.resize((240, 98), Image.ANTIALIAS)
+            resizedPic = processPic.resize((240, 98), Image.Resampling.LANCZOS)
             displayPic = ptk.PhotoImage(resizedPic)
             label = Label(image=displayPic)
             label.image = displayPic  # keep a reference!
@@ -400,7 +404,7 @@ def DisplayBarChart():
             one_count += 1
             
     # Displaying bar chart function from analysis
-    showBarChart(one_count, two_count, three_count, four_count, five_count)
+    showBarChart(one_count, two_count, three_count, four_count, five_count, currenthotelname)
 
 # Function to create and display a pie chart
 def DisplayPieChart():
@@ -415,13 +419,16 @@ def DisplayPieChart():
     analysis["Negative"] = [senti.polarity_scores(i)["neg"] for i in currenthotel.ReviewsList]
     positive = sum(analysis["Positive"])
     negative = sum(analysis["Negative"])
-    showPieChart(positive, negative)
+    showPieChart(positive, negative, currenthotelname)
 
 # Function for Show Analysis Button to display WordCloud, Bar Chart and Pie Chart
 def showAnalysis():
-    DisplayWorldCloud()
     DisplayBarChart()
     DisplayPieChart()
+
+# Function for Show keywords button to display WordCloud
+def showEmotions():
+    DisplayWorldCloud()
 
 def UpdateScrollbar():
     # scrollbar
@@ -467,11 +474,11 @@ def DisplayHotelDetails(hotel):
     processFourthSmall = p.Image.open(r"C:" + "Images/" + hotel.Name + " Images/" + hotel.Name + "6" + ".jpg")
 
     #resize images
-    resizedMain = processMain.resize((360, 250), Image.ANTIALIAS)
-    resizedFirst = processFirstSmall.resize((200, 122), Image.ANTIALIAS)
-    resizedSecond = processSecondSmall.resize((200, 122), Image.ANTIALIAS)
-    resizedThird = processThirdSmall.resize((200, 122), Image.ANTIALIAS)
-    resizedFourth = processFourthSmall.resize((200,122), Image.ANTIALIAS)
+    resizedMain = processMain.resize((360, 250), Image.Resampling.LANCZOS)
+    resizedFirst = processFirstSmall.resize((200, 122), Image.Resampling.LANCZOS)
+    resizedSecond = processSecondSmall.resize((200, 122), Image.Resampling.LANCZOS)
+    resizedThird = processThirdSmall.resize((200, 122), Image.Resampling.LANCZOS)
+    resizedFourth = processFourthSmall.resize((200,122), Image.Resampling.LANCZOS)
 
     #configure for display
     mainPic = ptk.PhotoImage(resizedMain)
@@ -879,6 +886,10 @@ BookmarkedButton.grid(row=0, column=1, sticky=W)
 #Show analysis 
 ShowAnalysisButton = Button(HotelNameFrame, text = "Show analysis", command=showAnalysis,font=(Textfont, 10), bg=ButtonColor)
 ShowAnalysisButton.grid(row=0, column=2)
+
+#Show keywords
+ShowKeywordsButton = Button(HotelNameFrame, text = "Show keywords", command=showEmotions,font=(Textfont, 10), bg=ButtonColor)
+ShowKeywordsButton.grid(row=0, column=3)
 
 #add frame for sort widgets
 ReviewFilterFrame = Frame(master=HotelReviewFrame, pady=5)

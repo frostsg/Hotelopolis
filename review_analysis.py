@@ -21,7 +21,7 @@ def pos_showWordCloud(review, hotelname):
   wordcloud = WordCloud().generate_from_frequencies(frequency_dist)
   f = plt.figure(hotelname + " Positive Aspects WordCloud")
   plt.imshow(wordcloud)
-  plt.title("What's good about this hotel?")
+  plt.title("Positive Aspects")
   plt.axis("off")
   f.show()
 
@@ -36,7 +36,7 @@ def neg_showWordCloud(review, hotelname):
   wordcloud = WordCloud().generate_from_frequencies(frequency_dist)
   f = plt.figure(hotelname + " Negative Aspects of this hotel")
   plt.imshow(wordcloud)
-  plt.title("Where to improve?")
+  plt.title("Negative Aspects")
   plt.axis("off")
   f.show()
 

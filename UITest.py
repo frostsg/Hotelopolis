@@ -12,7 +12,7 @@ from review_analysis import *
 ##########Initialise values############
 window = Tk()
 HotelCSVData = pd.read_csv("Filtered_Datafiniti_Hotel_Main_Review.csv")
-window.geometry("900x600")
+window.geometry("1920x1080")
 window.option_add("*Background", "#fff6ec")
 window.title("Hotelopolis")
 window.iconbitmap("icon/hotelopolis.ico")
@@ -283,8 +283,9 @@ def DisplayWorldCloud():
         if (hotel.Name == currenthotelname):
             currenthotel = hotel
 
-    pos_showWordCloud(currenthotel.pos_WordCloudReview, currenthotelname)
     neg_showWordCloud(currenthotel.neg_WordCloudReview, currenthotelname)
+    pos_showWordCloud(currenthotel.pos_WordCloudReview, currenthotelname)
+    
     
 
 def UpdateRecommendations(hotel): #display recommendations at side of hotel details
@@ -382,9 +383,11 @@ def DisplayPieChart():
 
 # Function for Show Analysis Button to display WordCloud, Bar Chart and Pie Chart
 def showAnalysis():
-    DisplayWorldCloud()
     DisplayBarChart()
     DisplayPieChart()
+
+def showEmotions():
+    DisplayWorldCloud()
 
 def UpdateScrollbar():
     # scrollbar
@@ -694,6 +697,10 @@ BookmarkedButton.grid(row=0, column=1, sticky=W)
 #Show analysis 
 ShowAnalysisButton = Button(HotelNameFrame, text = "Show analysis", command=showAnalysis)
 ShowAnalysisButton.grid(row=0, column=2)
+
+#Show keywords
+ShowEmotionButton = Button(HotelNameFrame, text = "Show keywords", command=showEmotions)
+ShowEmotionButton.grid(row=0, column=3)
 
 #add frame for sort widgets
 ReviewFilterFrame = Frame(master=HotelReviewFrame, pady=5)

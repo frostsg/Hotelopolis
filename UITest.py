@@ -283,8 +283,9 @@ def DisplayWorldCloud():
         if (hotel.Name == currenthotelname):
             currenthotel = hotel
 
-    pos_showWordCloud(currenthotel.pos_WordCloudReview)
-    neg_showWordCloud(currenthotel.neg_WordCloudReview)
+    pos_showWordCloud(currenthotel.pos_WordCloudReview, currenthotelname)
+    neg_showWordCloud(currenthotel.neg_WordCloudReview, currenthotelname)
+    
 
 def UpdateRecommendations(hotel): #display recommendations at side of hotel details
     for HotelButton in RecommendedHotelsList: #destroy all buttons recommended before to refresh with new ones
@@ -362,7 +363,7 @@ def DisplayBarChart():
             one_count += 1
             
     # Displaying bar chart function from analysis
-    showBarChart(one_count, two_count, three_count, four_count, five_count)
+    showBarChart(one_count, two_count, three_count, four_count, five_count, currenthotelname)
 
 # Function to create and display a pie chart
 def DisplayPieChart():
@@ -377,7 +378,7 @@ def DisplayPieChart():
     analysis["Negative"] = [senti.polarity_scores(i)["neg"] for i in currenthotel.ReviewsList]
     positive = sum(analysis["Positive"])
     negative = sum(analysis["Negative"])
-    showPieChart(positive, negative)
+    showPieChart(positive, negative, currenthotelname)
 
 # Function for Show Analysis Button to display WordCloud, Bar Chart and Pie Chart
 def showAnalysis():

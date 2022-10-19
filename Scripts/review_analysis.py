@@ -7,7 +7,7 @@ from nltk.corpus import stopwords
 from wordcloud import WordCloud
 import matplotlib.pyplot as plt
 import re
-from filtering import *
+from Scripts.filtering import *
 
 def pos_showWordCloud(review, hotelname):
   # use tokenize function to use nlp to convert review to list

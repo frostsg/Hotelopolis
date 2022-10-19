@@ -4,11 +4,11 @@ import pandas
 import pandas as pd
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
 import os.path
-from filtering import *
+from Scripts.filtering import *
 from pathlib import Path
 
 from PIL import ImageTk, Image
-from review_analysis import *
+from Scripts.review_analysis import *
 
 # JFStart
 import os
@@ -18,12 +18,12 @@ import PIL as p
 import PIL.ImageTk as ptk
 import bs4
 import requests
-from webscraper import *
+from Scripts.webscraper import *
 from PIL import Image
 # google
 from selenium import webdriver
 
-from webscraper import urlchecker
+from Scripts.webscraper import urlchecker
 
 #end
 
@@ -274,7 +274,7 @@ def FilterAndSortHotelDetails(sortoption = None): #update main menu based on fil
             HotelPicture = Label(MenuHotelFrame, image=displayPic, anchor=CENTER)
             # end
             HotelPicture.grid(row=0, column=0, sticky=W)
-            HotelButton = Button(MenuHotelFrame, text=hotel.Name + "\n"+hotel.Address + "\n Average Score: %0.1f/5" % hotel.AverageScore + "\n Facilities: " + facilitieslist,
+            HotelButton = Button(MenuHotelFrame, text=hotel.Name + "\n"+hotel.Address + "\n Star Rating: %0.1f/5" % hotel.AverageScore + "\n Facilities: " + facilitieslist,
                                      command=lambda hotel=hotel: DisplayHotelDetails(hotel), width=60, height=6, font=(Textfont, 10), relief=GROOVE, bg=ButtonColor)
             HotelButton.grid(row=0, column=1, sticky=W)
             HotelMenuList.append(MenuHotelFrame) #add hotel button back into list
@@ -294,7 +294,7 @@ def FilterAndSortHotelDetails(sortoption = None): #update main menu based on fil
                 # end
                 HotelPicture.grid(row=0, column=0, sticky=W)
                 HotelButton = Button(MenuHotelFrame,
-                                     text=hotel.Name + "\n" + hotel.Address + "\n Average Score: %0.1f/5" % hotel.AverageScore + "\n Facilities: " + facilitieslist,
+                                     text=hotel.Name + "\n" + hotel.Address + "\n Star Rating : %0.1f/5" % hotel.AverageScore + "\n Facilities: " + facilitieslist,
                                      command=lambda hotel=hotel: DisplayHotelDetails(hotel), width=60, height=6,
                                      font=(Textfont, 10), relief=GROOVE, bg=ButtonColor)
                 HotelButton.grid(row=0, column=1, sticky=W)
@@ -344,7 +344,7 @@ def UpdateRecommendations(hotel): #display recommendations at side of hotel deta
             RecoHotelPicture = Label(RecoHotelFrame, image=displayPic, anchor=CENTER)
             # end
             RecoHotelPicture.grid(row=0, column=0, sticky=W)
-            RecoHotelMenuButton = Button(RecoHotelFrame, text=otherhotel.Name + "\n Average Score: %0.1f/5" % otherhotel.AverageScore + "\n Facilities: " + facilitieslist,
+            RecoHotelMenuButton = Button(RecoHotelFrame, text=otherhotel.Name + "\n Star Rating: %0.1f/5" % otherhotel.AverageScore + "\n Facilities: " + facilitieslist,
                                      command=lambda otherhotel=otherhotel: DisplayHotelDetails(otherhotel), width=30, height=6, font=(Textfont, 10), relief=GROOVE, wraplength=200, bg=ButtonColor)
             RecoHotelMenuButton.grid(row=0, column=1, sticky=N)
             RecommendedHotelsList.append(RecoHotelFrame)
@@ -378,7 +378,7 @@ def FilterReviews(filterby):
             continue
         ReviewTextFrame = Frame(master=HotelReviewFrame, highlightbackground=Framecolor, highlightthickness=1)
         ReviewTextFrame.grid(row=index + 2, column=0, sticky=NSEW, pady=5)
-        ReviewsScoreText = Label(ReviewTextFrame, text=("Score:", score))
+        ReviewsScoreText = Label(ReviewTextFrame, text=("Stars:", score))
         ReviewsScoreText.grid(row=index, column=0, sticky=NW)
         ReviewsText = Label(ReviewTextFrame, text=currenthotel.ReviewsList[index], justify=LEFT, wraplength=800)
         ReviewsText.grid(row=index + 1, column=0, sticky=NW)
@@ -516,7 +516,7 @@ def DisplayHotelDetails(hotel):
     for index, score in enumerate(hotel.ScoresList):
         ReviewTextFrame = Frame(master=HotelReviewFrame, highlightbackground=Framecolor, highlightthickness=1)
         ReviewTextFrame.grid(row=index +2, column=0, sticky=NSEW, pady=5)
-        ReviewsScoreText = Label(ReviewTextFrame, text=("Score:",score))
+        ReviewsScoreText = Label(ReviewTextFrame, text=("Stars:",score))
         ReviewsScoreText.grid(row=index, column=0, sticky=NW)
         ReviewsText = Label(ReviewTextFrame, text=hotel.ReviewsList[index], justify=LEFT, wraplength=800)
         ReviewsText.grid(row=index+1, column=0, sticky=NW)
@@ -547,9 +547,18 @@ def open_popup():
     input_text.grid(row=2, column=3)
     #input_text = Text(top, height=3, width=50)
     #input_text.grid(row=2, column=3)
-    Ok_button = Button(top, text = "Ok add it!", command= take_input,font=(Textfont,10), bg=ButtonColor)
+    Ok_button = Button(top, text = "Ok add it!", command= on_button,font=(Textfont,10), bg=ButtonColor)
     Ok_button.grid(row=3, column=3)
     
+def addHotel_loadingscreen():
+    global load
+    load = Toplevel(MainFrame)
+    img = ImageTk.PhotoImage(Image.open("GdTTaIrf_400x400.png"))
+    panel = Label(load, image = img)
+    panel.pack(side="bottom", fill="both", expand="yes")
+    load.geometry("400x400+520+150")
+    #load.reizable(width=True, height=True)
+    time.sleep(60)
 
 ## Take string input and start webscrapping
 def take_input(*args):
@@ -562,23 +571,9 @@ def take_input(*args):
 
 ## Click on button
 def on_button():
+    #addHotel_loadingscreen()
     take_input()
 
-#####Main code#####
-Bookmarkdata = UpdateBookmarkCsv()
-#Bookmarkdata = pd.read_csv("Bookmarks.csv", index_col=0)
-for i in HotelOptions:
-    #create hotels
-    ReviewsList = list(HotelCSVData.loc[HotelCSVData.name == i, 'reviews.text'])
-    ReviewsRating = list(HotelCSVData.loc[HotelCSVData.name == i, 'reviews.rating'])
-    AddressList = HotelCSVData.loc[HotelCSVData.name == i, 'address']
-    Address = AddressList.iat[0]
-    Bookmarked = Bookmarkdata.loc[Bookmarkdata.name == i, 'bookmarked'].bool()
-    HotelObject = Hotel(i, Address, ReviewsRating, ReviewsList, Bookmarked)
-    HotelsList.append(HotelObject)
-    if(Bookmarked == True):
-        BookmarkedHotelsObjectsList.append(HotelObject)
-        BookmarkedHotelsNameList.append(HotelObject.Name)
 
 #JF
 def scrapeImages(name): #function to scrape images from web
@@ -765,7 +760,7 @@ HotelReviewFrame = Frame(master=HotelDetailsFrame)
 HotelReviewFrame.grid(row=2, column=0, sticky=NW)
 
 #Recommendation Label
-RecommendationLabel = Label(RecommendationFrame, text="You may also like:", font=(Textfont, 10))
+RecommendationLabel = Label(RecommendationFrame, text="You may also like:", font=(Textfont, 15))
 RecommendationLabel.grid(row=0, column=0)
 
 #Back to menu Button
@@ -782,6 +777,22 @@ for name in HotelOptions:
     else:
         pass
 #end
+
+#####Main code#####
+Bookmarkdata = UpdateBookmarkCsv()
+#Bookmarkdata = pd.read_csv("Bookmarks.csv", index_col=0)
+for i in HotelOptions:
+    #create hotels
+    ReviewsList = list(HotelCSVData.loc[HotelCSVData.name == i, 'reviews.text'])
+    ReviewsRating = list(HotelCSVData.loc[HotelCSVData.name == i, 'reviews.rating'])
+    AddressList = HotelCSVData.loc[HotelCSVData.name == i, 'address']
+    Address = AddressList.iat[0]
+    Bookmarked = Bookmarkdata.loc[Bookmarkdata.name == i, 'bookmarked'].bool()
+    HotelObject = Hotel(i, Address, ReviewsRating, ReviewsList, Bookmarked)
+    HotelsList.append(HotelObject)
+    if(Bookmarked == True):
+        BookmarkedHotelsObjectsList.append(HotelObject)
+        BookmarkedHotelsNameList.append(HotelObject.Name)
 
 #Hotel name label in display hotel options
 HotelNameLabel = Label(HotelNameFrame, font=(Textfont, 30))

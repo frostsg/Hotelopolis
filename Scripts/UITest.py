@@ -4,10 +4,10 @@ import pandas
 import pandas as pd
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
 import os.path
-from filtering import *
-from webscraper import *
+from Scripts.filtering import *
+from Scripts.webscraper import *
 from PIL import ImageTk, Image
-from review_analysis import *
+from Scripts.review_analysis import *
 
 ##########Initialise values############
 window = Tk()

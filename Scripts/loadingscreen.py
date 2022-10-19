@@ -4,10 +4,10 @@ import pandas
 import pandas as pd
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
 import os.path
-from filtering import *
+from Scripts.filtering import *
 
 from PIL import ImageTk, Image
-from review_analysis import *
+from Scripts.review_analysis import *
 
 # JFStart
 import os
@@ -17,12 +17,12 @@ import PIL as p
 import PIL.ImageTk as ptk
 import bs4
 import requests
-from webscraper import *
+from Scripts.webscraper import *
 from PIL import Image
 # google
 from selenium import webdriver
 
-from webscraper import urlchecker
+from Scripts.webscraper import urlchecker
 from selenium.webdriver.chrome.options import Options
 
 

@@ -137,7 +137,7 @@ class Hotel:
         for index, score in enumerate(self.ScoresList):
             if(int(score) >=4):
                 GoodReviewsList.append(self.ReviewsList[index])
-            if (int(score) <= 4):
+            if (int(score) <= 3):
                 BadReviewsList.append(self.ReviewsList[index])
 
         self.pos_WordCloudReview = ','.join(GoodReviewsList)

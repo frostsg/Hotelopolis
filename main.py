@@ -5,6 +5,7 @@ import pandas as pd
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
 import os.path
 from filtering import *
+from pathlib import Path
 
 from PIL import ImageTk, Image
 from review_analysis import *
@@ -162,6 +163,16 @@ class Hotel:
         self.pos_WordCloudReview = ','.join(GoodReviewsList)
         self.neg_WordCloudReview = ','.join(BadReviewsList)
 
+        self.PhotosList = []
+        Photos = []
+        directory = r"C:" + "Images/" + name + ' Images'
+        files = Path(directory).glob('*')
+        for file in files:
+            Photos.append(file)
+        for i in range(0,6):
+            self.PhotosList.append(p.Image.open(Photos[i]))
+
+
 #################functions#####################
 def ClearMainMenu(): #clear all widgets on main menu
     MainMenuFrame.grid_forget()
@@ -256,9 +267,7 @@ def FilterAndSortHotelDetails(sortoption = None): #update main menu based on fil
             MenuHotelFrame = Frame(master=MainMenuFrame, highlightthickness=2, highlightbackground=Framecolor)
             MenuHotelFrame.grid(row=index + 1, column=0, sticky=N, pady=10, padx=10)
             facilitieslist = ', '.join(hotel.Facilities)
-            # JF amended
-            processPic = p.Image.open(r"C:"+ "Images/" + hotel.Name + " Images/" + hotel.Name + "1" + ".jpg")
-            resizedPic = processPic.resize((240, 98), Image.Resampling.LANCZOS)
+            resizedPic = hotel.PhotosList[0].resize((240, 98), Image.Resampling.LANCZOS)
             displayPic = ptk.PhotoImage(resizedPic)
             label = Label(image=displayPic)
             label.image = displayPic  # keep a reference!
@@ -277,9 +286,7 @@ def FilterAndSortHotelDetails(sortoption = None): #update main menu based on fil
                 MenuHotelFrame = Frame(master=MainMenuFrame, highlightthickness=2, highlightbackground=Framecolor)
                 MenuHotelFrame.grid(row=index + 1, column=0, sticky=N, pady=10, padx=10)
                 facilitieslist = ', '.join(hotel.Facilities)
-                # JF amended
-                processPic = p.Image.open(r"C:" "Images/" + hotel.Name + " Images/" + hotel.Name + "1" + ".jpg")
-                resizedPic = processPic.resize((240, 98), Image.Resampling.LANCZOS)
+                resizedPic = hotel.PhotosList[0].resize((240, 98), Image.Resampling.LANCZOS)
                 displayPic = ptk.PhotoImage(resizedPic)
                 label = Label(image=displayPic)
                 label.image = displayPic  # keep a reference!
@@ -296,9 +303,9 @@ def FilterAndSortHotelDetails(sortoption = None): #update main menu based on fil
 
     #show no results label if completely empty
     if(len(HotelMenuList) == 0):
-        Emptylabel.grid(row= 1, column=0, sticky=N, pady=10)
+        MainMenuNoResultLabel.grid(row= 1, column=0, sticky=N, pady=10)
     else:
-        Emptylabel.grid_forget()#clear no result label if there are hotels to display
+        MainMenuNoResultLabel.grid_forget()#clear no result label if there are hotels to display
 
     UpdateScrollbar()
 
@@ -330,8 +337,7 @@ def UpdateRecommendations(hotel): #display recommendations at side of hotel deta
             RecoHotelFrame = Frame(master=RecommendationFrame, highlightthickness=2, highlightbackground=Framecolor)
             RecoHotelFrame.grid(row=index + 1, column=0, sticky=N, pady=10)
             # JF amended
-            processPic = p.Image.open(r"C:"+ "Images/" + otherhotel.Name + " Images/" + otherhotel.Name + "1" + ".jpg")
-            resizedPic = processPic.resize((240, 98), Image.Resampling.LANCZOS)
+            resizedPic = otherhotel.PhotosList[0].resize((240, 98), Image.Resampling.LANCZOS)
             displayPic = ptk.PhotoImage(resizedPic)
             label = Label(image=displayPic)
             label.image = displayPic  # keep a reference!
@@ -377,6 +383,11 @@ def FilterReviews(filterby):
         ReviewsText = Label(ReviewTextFrame, text=currenthotel.ReviewsList[index], justify=LEFT, wraplength=800)
         ReviewsText.grid(row=index + 1, column=0, sticky=NW)
         ReviewItemsList.append(ReviewTextFrame)
+
+    if(len(ReviewItemsList) == 0):#show no results if there are no reviews
+        ReviewNoResultLabel.grid(row=2, column=0)
+    else:
+        ReviewNoResultLabel.grid_forget()#show no results if there are no reviews
 
     UpdateScrollbar()
 
@@ -465,20 +476,12 @@ def DisplayHotelDetails(hotel):
     # configure hotel average score /5
     AverageScoreLabel.config(text= "Star Rating: %0.1f"%hotel.AverageScore+ "/5")
 
-    # JF amended
-    #retrieve images from folder
-    processMain = p.Image.open(r"C:" + "Images/" + hotel.Name + " Images/" + hotel.Name + "2" + ".jpg")
-    processFirstSmall = p.Image.open(r"C:" + "Images/" + hotel.Name + " Images/" + hotel.Name + "3" + ".jpg")
-    processSecondSmall = p.Image.open(r"C:" + "Images/" + hotel.Name + " Images/" + hotel.Name + "4" + ".jpg")
-    processThirdSmall = p.Image.open(r"C:" + "Images/" + hotel.Name + " Images/" + hotel.Name + "5" + ".jpg")
-    processFourthSmall = p.Image.open(r"C:" + "Images/" + hotel.Name + " Images/" + hotel.Name + "6" + ".jpg")
-
     #resize images
-    resizedMain = processMain.resize((360, 250), Image.Resampling.LANCZOS)
-    resizedFirst = processFirstSmall.resize((200, 122), Image.Resampling.LANCZOS)
-    resizedSecond = processSecondSmall.resize((200, 122), Image.Resampling.LANCZOS)
-    resizedThird = processThirdSmall.resize((200, 122), Image.Resampling.LANCZOS)
-    resizedFourth = processFourthSmall.resize((200,122), Image.Resampling.LANCZOS)
+    resizedMain = hotel.PhotosList[1].resize((360, 250), Image.Resampling.LANCZOS)
+    resizedFirst = hotel.PhotosList[2].resize((200, 122), Image.Resampling.LANCZOS)
+    resizedSecond = hotel.PhotosList[3].resize((200, 122), Image.Resampling.LANCZOS)
+    resizedThird = hotel.PhotosList[4].resize((200, 122), Image.Resampling.LANCZOS)
+    resizedFourth = hotel.PhotosList[5].resize((200,122), Image.Resampling.LANCZOS)
 
     #configure for display
     mainPic = ptk.PhotoImage(resizedMain)
@@ -519,6 +522,10 @@ def DisplayHotelDetails(hotel):
         ReviewsText.grid(row=index+1, column=0, sticky=NW)
         ReviewItemsList.append(ReviewTextFrame)
 
+    if (len(ReviewItemsList) == 0):#show no results if there are no reviews
+        ReviewNoResultLabel.grid(row=2, column=0)
+    else:
+        ReviewNoResultLabel.grid_forget()#show no results if there are no reviews
 
     UpdateRecommendations(hotel) #call update recommendations to show hotels with similar or better ratings
     #show widgets needed for hotel details
@@ -531,7 +538,7 @@ def DisplayHotelDetails(hotel):
 def open_popup():
     global top
     top = Toplevel(MainFrame)
-    top.geometry("400x150")
+    top.geometry("500x150")
     top.title("Add hotel")
     Label(top, text= "Enter the url of the hotel below! (Tripadvisor.com or booking.com)", font=(Textfont,10)).grid(row=0,column=3)
     global input_text
@@ -797,7 +804,10 @@ AverageScoreLabel = Label(HotelDescriptionFrame, text="",font=(Textfont, 15))
 AverageScoreLabel.grid(row=3, column=0, sticky=NW)
 
 #No results label in main menu
-Emptylabel = Label(MainMenuFrame,text="No Results", font=(Textfont, 20), width=37)
+MainMenuNoResultLabel = Label(MainMenuFrame,text="No Results", font=(Textfont, 20), width=37)
+
+#No results label in review
+ReviewNoResultLabel= Label(HotelReviewFrame,text="No Results", font=(Textfont, 20), width=37)
 
 #filter options
 FilterLabel = Label(FilterFrame, text="Filters", font=(Textfont, 20))
@@ -877,7 +887,6 @@ BookmarkDropdown = OptionMenu(ContentFrame, BookmarkNameVariable, *BookmarkedHot
 BookmarkDropdown.config(font=(Textfont, 10), bg=ButtonColor)
 BookmarkDropdown["menu"].config(font=(Textfont, 10), bg=ButtonColor)
 BookmarkDropdown.grid(row=0, column=0, sticky=W, padx=40)
-
 
 #bookmarked checkbutton in display hotel details
 BookmarkedVariable = BooleanVar()

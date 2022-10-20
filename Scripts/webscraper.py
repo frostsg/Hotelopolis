@@ -92,7 +92,7 @@ def urlchecker(url):
         print("This url is invalid")
           
           
-
+# Previously scrapped hotel reviews 
 #urlchecker("https://www.tripadvisor.com/Hotel_Review-g298570-d555433-Reviews-Hilton_Kuala_Lumpur-Kuala_Lumpur_Wilayah_Persekutuan.html")
 #urlchecker("https://www.tripadvisor.com.sg/Hotel_Review-g298570-d12621892-Reviews-EQ_Kuala_Lumpur-Kuala_Lumpur_Wilayah_Persekutuan.html")
 #urlchecker("https://www.tripadvisor.com/Hotel_Review-g60763-d93525-Reviews-Sanctuary_Hotel_New_York-New_York_City_New_York.html")

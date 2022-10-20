@@ -3,32 +3,26 @@ import math
 import pandas
 import pandas as pd
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
+import os
 import os.path
 from Scripts.filtering import *
 from pathlib import Path
-
-from PIL import ImageTk, Image
-from Scripts.review_analysis import *
-
-# JFStart
-import os
-import os.path
 import time
-import PIL as p
-import PIL.ImageTk as ptk
 import bs4
 import requests
-from Scripts.webscraper import *
+import PIL as p
+import PIL.ImageTk as ptk
 from PIL import Image
-# google
 from selenium import webdriver
+from Scripts.review_analysis import *
+from Scripts.webscraper import *
 
-from Scripts.webscraper import urlchecker
+
 
 ##########Initialise variables############
 window = Tk()
 HotelCSVData = pd.read_csv("Filtered_Datafiniti_Hotel_Main_Review.csv")
-window.geometry("1920x1080")
+window.geometry("1600x900")
 window.option_add("*Background", "#fff6ec")
 window.title("Hotelopolis")
 window.iconbitmap("icon/hotelopolis.ico")
@@ -180,8 +174,6 @@ def InitialiseHotels():
         folder_name = r"C:" + "Images/" + name + ' Images'
         if not os.path.isdir(folder_name):
             scrapeImages(name)
-        elif name == HotelOptions[-1]:
-            os.system("taskkill /im chrome.exe /f")
         else:
             pass
 
@@ -652,7 +644,7 @@ def scrapeImages(name): #function to scrape images from web
             print("Downloaded element %s out of %s total. URL: %s" % (i, len_containers + 1, imageURL))
         except:
             print("Couldn't download an image %s, continuing downloading the next one" % (i))
-
+    driver.quit()
 
 def download_image(url, name, num): #function to download image
     while True:

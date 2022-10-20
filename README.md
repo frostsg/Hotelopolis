@@ -25,6 +25,14 @@ To start, download the project into a folder of our choice. Enter the following 
 ```bash
 pip install -r requirements.txt
 ```
+After installing the required dependencies, enter the following command in the python console/terminal
+```python
+import nltk
+nltk.download('vader_lexicon')
+nltk.download('punkt')
+nltk.download('stopwords')
+```
+Once the process is done, the tool should be able to run without any issues.
 
 ## Usage
 To run this tool, enter the following command in console/terminal under the project root directory

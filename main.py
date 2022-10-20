@@ -300,7 +300,7 @@ def FilterAndSortHotelDetails(sortoption = None): #update main menu based on fil
             HotelPicture = Label(MenuHotelFrame, image=displayPic, anchor=CENTER)
             HotelPicture.grid(row=0, column=0, sticky=W)
             HotelButton = Button(MenuHotelFrame, text=hotel.Name + "\n"+hotel.Address + "\n Star Rating: %0.1f/5" % hotel.AverageScore + "\n Facilities: " + facilitieslist,
-                                     command=lambda hotel=hotel: DisplayHotelDetails(hotel), width=60, height=6, font=(Textfont, 10), relief=GROOVE, bg=ButtonColor)
+                                     command=lambda hotel=hotel: DisplayHotelDetails(hotel), width=60, height=6, font=(Textfont, 10), relief=GROOVE, bg=ButtonColor, wraplength=400)
             HotelButton.grid(row=0, column=1, sticky=W)
             HotelMenuList.append(MenuHotelFrame) #add hotel button back into list
     else:
@@ -321,7 +321,7 @@ def FilterAndSortHotelDetails(sortoption = None): #update main menu based on fil
                 HotelButton = Button(MenuHotelFrame,
                                      text=hotel.Name + "\n" + hotel.Address + "\n Star Rating : %0.1f/5" % hotel.AverageScore + "\n Facilities: " + facilitieslist,
                                      command=lambda hotel=hotel: DisplayHotelDetails(hotel), width=60, height=6,
-                                     font=(Textfont, 10), relief=GROOVE, bg=ButtonColor)
+                                     font=(Textfont, 10), relief=GROOVE, bg=ButtonColor,wraplength=400)
                 HotelButton.grid(row=0, column=1, sticky=W)
                 HotelMenuList.append(MenuHotelFrame)  # add hotel button back into list
 

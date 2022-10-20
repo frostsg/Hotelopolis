@@ -566,6 +566,7 @@ def open_popup():
     top = Toplevel(MainFrame)
     top.geometry("400x150")
     top.title("Add hotel")
+    top.iconbitmap("icon/hotelopolis.ico")
     Label(top, text= "Enter the url of the hotel below! (Tripadvisor.com or booking.com)", font=(Textfont,10)).grid(row=0,column=3)
     global input_text
     input_text = Entry(top, width=40, textvariable="url")
@@ -594,12 +595,12 @@ def _on_mouse_wheel(event):
 def scrapeImages(name): #function to scrape images from web
     chromePath = r'C:chromedriver.exe'
 
-    #chrome_options = webdriver.ChromeOptions()
-    #chrome_options.add_argument('--headless')
-    #chrome_options.add_argument('--no-sandbox')
-    #chrome_options.add_argument('--disable-dev-shm-usage')
+    chrome_options = webdriver.ChromeOptions()
+    chrome_options.add_argument('--headless')
+    chrome_options.add_argument('--no-sandbox')
+    chrome_options.add_argument('--disable-dev-shm-usage')
     #options = chrome_options
-    driver = webdriver.Chrome(chromePath)
+    driver = webdriver.Chrome(chromePath, options=chrome_options)
     # create directory to save image
     folder_name = r"C:"+ "Images/" + name + ' Images'
     if not os.path.isdir(folder_name):
